@@ -4,6 +4,7 @@ import pydeck as pdk
 import streamlit as st
 
 PREDICTION_URL = 'https://taxifare.lewagon.ai/predict'
+PREDICTION_URL = 'http://127.0.0.1:8000/calculate_change'
 
 # TODO: Put the pointer yourself
 # TODO: Make the marker to scale
@@ -73,10 +74,12 @@ st.json(params)
 # Prediction Functionality
 if st.button('Calculate Change') and all(params.values()):
     response = requests.get(url=PREDICTION_URL, params=params, timeout=5)
+    url = PREDICTION_URL
+    response = requests.get(url, params=params, timeout=5)
     prediction_json = response.json()
-    prediction = round(prediction_json["fare"], 2)
+    prediction = round(prediction_json["change"], 2)
     prediction_string = format(prediction, '.2f')
-    st.markdown("""
+    st.markdown(f"""
                 In the specified plot of land,
                 the rainforest area was reduced by {prediction_string} %
                 between {start_timeframe} and {end_timeframe}.
