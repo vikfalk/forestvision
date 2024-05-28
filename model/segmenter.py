@@ -16,7 +16,7 @@ def image_segmenter(input_path, output_path, model):
     bbox = binary_image_pil.getbbox()
     cropped_img = binary_image_pil.crop(bbox) if bbox else binary_image_pil
     cropped_img.save(output_path)
-    print("Segmented model has successfully been saved at: \n{output_path}")
+    print(f"Segmented model has successfully been saved at: \n{output_path}")
 
 # model_ = load_model('./model/unet-attention-3d.hdf5')
 # input_file_ending = ".tiff"

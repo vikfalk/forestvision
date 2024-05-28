@@ -19,14 +19,12 @@ def compare_coverage(
 
     forest_coverage_1 = calculate_black_coverage(array_1)
     forest_coverage_2 = calculate_black_coverage(array_2)
-    change_term = "increase" if forest_coverage_1 < forest_coverage_2 else "decrease"
+    change_phrase = "an increase" if forest_coverage_1 < forest_coverage_2 else "a decrease"
     change_percentage = round(((forest_coverage_2 - forest_coverage_1) / forest_coverage_1) * 100, 2)
 
     result_string = (f"""
     The forest coverage on the first image is {round(forest_coverage_1, 2)} %,
     the forest coverage on the second image is {round(forest_coverage_2, 2)} %.
-    That is a {change_term} of {change_percentage} %.
+    That is {change_phrase} of {change_percentage} %.
     """)
     return result_string
-
-print(compare_coverage())
