@@ -22,3 +22,5 @@ rad.json
 TestResults.xml
 # Local Notebooks
 davids_backend_nb.ipynb
+# temporary files of macOS
+.DS_Store
