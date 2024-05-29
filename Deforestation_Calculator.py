@@ -1,3 +1,5 @@
+from PIL import Image
+import numpy as np
 import datetime as dt
 import requests
 import pydeck as pdk
@@ -107,7 +109,22 @@ else:
                 """)
 
 col1, col2 = st.columns(2)
-with col1:
-    st.image("./images/before_resized.png", caption="Before")
-with col2:
-    st.image("./images/after_resized.png", caption="After")
+col1.image("./images/before_resized.png", caption="Before")
+col2.image("./images/after_resized.png", caption="After")
+
+
+st.title("Image Fetcher from API")
+api_options = [
+    "http://localhost:8000/get_image",
+    "http://localhost:8000/get_complex_image",
+    "http://localhost:8000/get_image_from_model",
+]
+api_url = st.selectbox('API Selection', api_options)
+
+if st.button("press to test api"):
+    response = requests.get(api_url, timeout=5)
+    image_list = response.json().get("image_list")
+    image_array = np.array(image_list, dtype=np.uint8)
+    image =  Image.fromarray(image_array)
+    if image:
+            st.image(image, caption="Fetched Image")
