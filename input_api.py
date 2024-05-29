@@ -52,7 +52,7 @@ resolution_m = 10
 time_interval = ('2024-04-28', '2024-05-28')
 
 # Evalscript for true color
-def true_color_image(lat_deg, lon_deg, pixel_size, resolution, config):
+def request_image(lat_deg, lon_deg, pixel_size, resolution, time_interval, config, request_type):
     evalscript_true_color = """
     //VERSION=3
 
@@ -70,10 +70,36 @@ def true_color_image(lat_deg, lon_deg, pixel_size, resolution, config):
     return [2.5 * sample.B04, 2.5 * sample.B03, 2.5 * sample.B02];
     }
     """
+    evalscript_four_bands = """
+        //VERSION=3
+        function setup() {
+            return {
+                input: [{
+                    bands: ["B02","B03","B04","B08"],
+                    units: "DN"
+                }],
+                output: {
+                    bands: 4,
+                    sampleType: "FLOAT32"
+                }
+            };
+        }
 
+        function evaluatePixel(sample) {
+            return [sample.B02,
+                    sample.B03,
+                    sample.B04,
+                    sample.B08,
+                    ];
+        }
+    """
+    if request_type == 'TrueColor':
+        evalscript = evalscript_true_color
+    elif request_type == '4-band':
+        evalscript = evalscript_four_bands
     request = SentinelHubRequest(
         data_folder="sentinel_imgs",
-        evalscript=evalscript_true_color,
+        evalscript=evalscript,
         input_data=[
             SentinelHubRequest.input_data(
                 data_collection=DataCollection.SENTINEL2_L2A,
@@ -93,11 +119,13 @@ def true_color_image(lat_deg, lon_deg, pixel_size, resolution, config):
 
 if __name__ == '__main__':
     config = sentinelhub_authorization()
-    print(true_color_image(
+    print(request_image(
                     lat_deg=lat_deg,
                     lon_deg=lon_deg,
                     pixel_size=pixel_size,
                     resolution=resolution_m,
-                    config=config
+                    config=config,
+                    time_interval=time_interval,
+                    request_type='TrueColor'
                     ).flatten().mean()
     )
