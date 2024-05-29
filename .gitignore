@@ -20,5 +20,7 @@ rad.json
 *.flf
 #Test results file
 TestResults.xml
-# Davids Notebook
+# Notebook
 davids_backend_nb.ipynb
+Fetch_Sentinel_Image.ipynb
+.ipynb_checkpoints

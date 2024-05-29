@@ -2,3 +2,6 @@ fastapi
 uvicorn
 tensorflow
 numpy
+
+#Image-Aquisition
+sentinelhub
