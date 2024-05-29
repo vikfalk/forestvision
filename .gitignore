@@ -21,6 +21,7 @@ rad.json
 #Test results file
 TestResults.xml
 # Notebook
+# Local Notebooks
 davids_backend_nb.ipynb
 Fetch_Sentinel_Image.ipynb
 .ipynb_checkpoints

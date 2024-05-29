@@ -5,13 +5,11 @@ from model.coverage_comparer import compare_coverage
 
 api_app = FastAPI()
 
-# Enter "uvicorn api:api_app --reload" in the command line and go to "http://localhost:8000/docs" to test it out.
+# Enter "uvicorn output_api:api_app --reload" in the command line and go to "http://localhost:8000/docs" to test it out.
 
 @api_app.get('/')
 def index():
     return {'api status': "running"}
-
-
 
 @api_app.get('/calculate_change')
 def calculate_change(
