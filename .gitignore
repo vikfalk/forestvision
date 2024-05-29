@@ -22,3 +22,5 @@ rad.json
 TestResults.xml
 # Local Notebooks
 davids_backend_nb.ipynb
+#pycache
+__pycache__
