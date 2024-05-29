@@ -20,7 +20,11 @@ rad.json
 *.flf
 #Test results file
 TestResults.xml
+# Notebook
 # Local Notebooks
 davids_backend_nb.ipynb
 # temporary files of macOS
 .DS_Store
+# sentinel image notebooks
+Fetch_Sentinel_Image.ipynb
+.ipynb_checkpoints
