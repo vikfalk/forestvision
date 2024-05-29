@@ -1,15 +1,37 @@
 from fastapi import FastAPI
-from PIL import Image
 import numpy as np
-from model.coverage_comparer import compare_coverage
+from model.segmenter import image_segmenter
+from fastapi.responses import JSONResponse
+from PIL import Image
 
 api_app = FastAPI()
 
 # Enter "uvicorn output_api:api_app --reload" in the command line and go to "http://localhost:8000/docs" to test it out.
 
+
 @api_app.get('/')
 def index():
     return {'api status': "running"}
+
+
+@api_app.get("/get_image")
+def get_image():
+    image_array = np.random.randint(0, 256, (3, 3, 3), dtype=np.uint8)
+    image_list = image_array.tolist()
+    return JSONResponse(content={"image_list": image_list})
+
+@api_app.get("/get_complex_image")
+def get_complex_image():
+    image = Image.open('./segmented_output_files/after_resized.png')
+    image_array = np.array(image)
+    image_list = image_array.tolist()
+    return JSONResponse(content={"image_list": image_list})
+
+@api_app.get("/get_image_from_model")
+def get_image_from_model():
+    image_array = image_segmenter()
+    image_list = image_array.tolist()
+    return JSONResponse(content={"image_list": image_list})
 
 @api_app.get('/calculate_change')
 def calculate_change(
@@ -25,3 +47,8 @@ def calculate_change(
     # )
     # return result_string
     return {'change': -12.34}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(api_app, host="0.0.0.0", port=8000)
