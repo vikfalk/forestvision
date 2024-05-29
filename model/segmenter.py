@@ -2,10 +2,15 @@ from tensorflow.keras.models import load_model
 from PIL import Image
 import numpy as np
 
-def image_segmenter(input_path, output_path, model):
+
+def image_segmenter(input_path, output_path, model, clip=True):
     # open and scale image
     img = Image.open(input_path)
-    img_array = np.array(img)/255.0
+    if clip:
+        img_array = np.array(img) / 255.0 * 3.5
+        img_array = np.clip(a=img_array, a_min=0, a_max=1)
+    else:
+        img_array = np.array(img) / 255.0
 
     # adding batch size dimension
     prediction = model.predict(np.expand_dims(img_array, axis=0))
@@ -28,6 +33,7 @@ def image_segmenter(input_path, output_path, model):
     cropped_img.save(output_path)
     print(f"\nSegmented image has successfully been saved at: \n{output_path}")
 
+# to be specified whereever this function will be used:
 # model_ = load_model('./model/unet-attention-3d.hdf5')
 # input_file_ending = ".tiff"
 # output_file_ending = ".png"
