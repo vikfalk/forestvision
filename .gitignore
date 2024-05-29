@@ -28,3 +28,6 @@ davids_backend_nb.ipynb
 # sentinel image notebooks
 Fetch_Sentinel_Image.ipynb
 .ipynb_checkpoints
+#env file
+.env
+.envrc

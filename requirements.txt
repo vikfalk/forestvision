@@ -1,8 +1,3 @@
-fastapi
-uvicorn
-tensorflow
-numpy
-
 #Image-Aquisition
 sentinelhub
 fastapi==0.111.0
