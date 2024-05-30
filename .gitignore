@@ -31,3 +31,5 @@ Fetch_Sentinel_Image.ipynb
 #env file
 .env
 .envrc
+# segmented_output_files
+segmented_output_files/
