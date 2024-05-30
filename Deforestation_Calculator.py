@@ -5,10 +5,8 @@ import requests
 import pydeck as pdk
 import streamlit as st
 
-API_URL = 'http://localhost:8000/calculate_change'
-
-# Enter "streamlit run Deforestation_Calculator.py" in the terminal to run it locally.
-# TODO: Functionality to allow the user to select the area on the map.
+# INSTRUCTION:
+# Enter "# Enter "streamlit run Deforestation_Calculator.py" in the terminal to run it locally." in the terminal to run it locally.
 
 st.set_page_config(
     page_title="Deforestation Tracker",
@@ -19,15 +17,13 @@ st.sidebar.markdown("""
     # Sidebar Placeholder
     """)
 
-
 st.markdown('''
 # Deforestation Tracker
-Enter the the coordinates below and see how the forest coverage has changed in the area of interest.
 ''')
 
 col1, col2, col3 = st.columns(3)
-latitude_input = float(col1.text_input('Latitude', '-3.04361'))
-longitude_input = float(col2.text_input('Longitude', '-60.01282'))
+latitude_input = float(col1.text_input('Latitude', '-8.48638'))
+longitude_input = float(col2.text_input('Longitude', '-55.26209'))
 factors = [100, 50, 25, 10, 5, 4, 3, 2, 1]
 square_size_options = [5.12 * factor for factor in factors]
 square_size = col3.selectbox('Side Length of the Square in km', square_size_options)
@@ -37,6 +33,7 @@ start_timeframe = col3.date_input('Start of Timeframe', dt.datetime(2021, 1, 1))
 end_timeframe = col4.date_input('End of Timeframe')
 sample_number = col5.number_input('Number of Samples', 1)
 
+#  Map Stuff
 view_state = pdk.ViewState(
     longitude=longitude_input,
     latitude=latitude_input,
@@ -67,7 +64,6 @@ polygon_layer = pdk.Layer(
     data=polygon_data,
     get_polygon='polygon',
     get_fill_color='[230, 184, 109, 140]',
-    # get_line_color='[255, 255, 255]',
     pickable=True,
     extruded=False
 )
@@ -79,6 +75,8 @@ st.pydeck_chart(pdk.Deck(
         tooltip={"text": "{name}"}
     ))
 
+# API Stuff
+st.title("Fetch Image from Satellite Using User Inputs")
 params = {
         'start_timeframe': start_timeframe,
         'end_timeframe': end_timeframe,
@@ -86,15 +84,32 @@ params = {
         'latitude': latitude_input,
         'sample_number': sample_number,
         'square_size' : square_size
-    }
+}
+param_api = "http://localhost:8000/get_image_from_satellite_with_params"
+if st.button("Test Input Sensitive API"):
+    response = requests.get(url=param_api, params=params, timeout=5)
+    image_list = response.json().get("image_list")
+    image_array = np.array(image_list, dtype=np.uint8)
+    image =  Image.fromarray(image_array)
+    if image:
+            st.image(image, caption="Fetched Image")
 
 st.markdown("""
-    Here are the parameters that are going to get fed to our model API:
-""")
-st.json(params)
+    # Testing Section
+    ## User Input Parameters
+    Here are the parameters that are going to get fed to our model API… NOT.
 
-if st.button('Calculate Change') and all(params.values()):
-    response = requests.get(url=API_URL, params=params, timeout=5)
+    Actually the date format will come out as as a string with the particular
+    format "YYYY-MM-DD".
+""")
+st.write(params)
+
+st.markdown("""
+    ## Calculating Coverage Change
+""")
+hard_coded_api = 'http://localhost:8000/calculate_change'
+if st.button('Calculate Change'):
+    response = requests.get(url=hard_coded_api, timeout=5)
     prediction_json = response.json()
     prediction = round(prediction_json["change"], 2)
     prediction_string = format(prediction, '.2f')
@@ -108,23 +123,29 @@ else:
                 Please press the button.
                 """)
 
-col1, col2 = st.columns(2)
-col1.image("./images/before_resized.png", caption="Before")
-col2.image("./images/after_resized.png", caption="After")
-
-
-st.title("Image Fetcher from API")
+st.markdown("""
+    ## Image Fetcher From API Without User Inputs
+""")
 api_options = [
     "http://localhost:8000/get_image",
     "http://localhost:8000/get_complex_image",
     "http://localhost:8000/get_image_from_model",
+    "http://localhost:8000/get_image_from_satellite"
 ]
 api_url = st.selectbox('API Selection', api_options)
 
-if st.button("press to test api"):
+if st.button("Test API"):
     response = requests.get(api_url, timeout=5)
     image_list = response.json().get("image_list")
     image_array = np.array(image_list, dtype=np.uint8)
     image =  Image.fromarray(image_array)
     if image:
             st.image(image, caption="Fetched Image")
+
+# Image Depiction Stuff
+st.markdown("""
+    ## Image Segmentation Example (File Saved Locally in Frontend Repo)
+""")
+col1, col2 = st.columns(2)
+col1.image("./images/before_resized.png", caption="Before")
+col2.image("./images/after_resized.png", caption="After")
