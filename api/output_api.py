@@ -7,9 +7,8 @@ from model.segmenter import segment
 from model.image_array_loaders import load_img_array_from_satellite, load_img_array_locally
 
 # INSTRUCTION:
-# Enter "uvicorn output_api:api_app --reload" in the command line.
+# Run this file, triggering the __main__ function.
 # Go to "http://localhost:8000/docs" to test it out.
-# Alternatively, run this file, triggering the __main__ function.
 
 api_app = FastAPI()
 

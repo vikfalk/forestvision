@@ -1,4 +1,4 @@
-from api_scripts.input_api import request_image, sentinelhub_authorization
+from api.input_api import request_image, sentinelhub_authorization
 from model.utils import path_constructor, timeframe_constructor
 from PIL import Image
 import numpy as np
