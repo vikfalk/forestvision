@@ -4,6 +4,8 @@ import datetime as dt
 import requests
 import pydeck as pdk
 import streamlit as st
+from PIL import Image
+import io
 
 # INSTRUCTION:
 # Enter "# Enter "streamlit run Deforestation_Calculator.py" in the terminal to run it locally." in the terminal to run it locally.
