@@ -1,12 +1,11 @@
-from tensorflow.keras.models import load_model
 from PIL import Image
 import numpy as np
 
-def image_segmenter(input_path, output_path, model):
-    # open and scale image
-    img = Image.open(input_path)
-    img_array = np.array(img)/255.0
-
+def segment(img_array: np.array, model) -> np.array:
+    """Takes a scaled image array, predicts its rainforest segmentation, converts it
+    to black and white and crops the images white padding. Returns a numpy
+    array representing the image.
+    """
     # adding batch size dimension
     prediction = model.predict(np.expand_dims(img_array, axis=0))
     predicted_image_array = prediction[0]
@@ -24,14 +23,6 @@ def image_segmenter(input_path, output_path, model):
     bbox = binary_image_pil.getbbox()
     cropped_img = binary_image_pil.crop(bbox) if bbox else binary_image_pil
 
-    # save the image
-    cropped_img.save(output_path)
-    print(f"\nSegmented image has successfully been saved at: \n{output_path}")
-
-# model_ = load_model('./model/unet-attention-3d.hdf5')
-# input_file_ending = ".tiff"
-# output_file_ending = ".png"
-# image_name_ = input("What is the name of the image file in the folder 'our_images' (without ending)? ")
-# input_path_ = "./raw_data/our_images/" + image_name_ + input_file_ending
-# output_path_ = "./segmented_output_files/" + image_name_ + output_file_ending
-# image_segmenter(input_path_, output_path_, model_)
+    # cropped_img.save(output_path)
+    cropped_img_array = np.array(cropped_img, dtype=np.uint8)
+    return cropped_img_array

@@ -20,7 +20,6 @@ rad.json
 *.flf
 #Test results file
 TestResults.xml
+# Notebook
 # Local Notebooks
 davids_backend_nb.ipynb
-#pycache
-__pycache__
