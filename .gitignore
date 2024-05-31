@@ -23,3 +23,7 @@ TestResults.xml
 # Notebook
 # Local Notebooks
 davids_backend_nb.ipynb
+
+#Viktors env
+.env
+.envrc
