@@ -1,5 +1,5 @@
-from api.input_api import request_image, sentinelhub_authorization
-from model.utils import path_constructor, timeframe_constructor
+from deforestation_tracker.sentinelhub_requester import request_image, sentinelhub_authorization
+from deforestation_tracker.utils import path_constructor, timeframe_constructor
 from PIL import Image
 import numpy as np
 
