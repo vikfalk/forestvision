@@ -87,7 +87,7 @@ params = {
 }
 param_api = "http://localhost:8000/get_image_from_satellite_with_params"
 if st.button("Test Input Sensitive API"):
-    response = requests.get(url=param_api, params=params, timeout=5)
+    response = requests.get(url=param_api, params=params, timeout=10)
     image_list = response.json().get("image_list")
     image_array = np.array(image_list, dtype=np.uint8)
     image =  Image.fromarray(image_array)
@@ -105,25 +105,6 @@ st.markdown("""
 st.write(params)
 
 st.markdown("""
-    ## Calculating Coverage Change
-""")
-hard_coded_api = 'http://localhost:8000/calculate_change'
-if st.button('Calculate Change'):
-    response = requests.get(url=hard_coded_api, timeout=5)
-    prediction_json = response.json()
-    prediction = round(prediction_json["change"], 2)
-    prediction_string = format(prediction, '.2f')
-    st.markdown(f"""
-                In the specified plot of land,
-                the rainforest area was reduced by {prediction_string} %
-                between {start_timeframe} and {end_timeframe}.
-                """)
-else:
-    st.markdown("""
-                Please press the button.
-                """)
-
-st.markdown("""
     ## Image Fetcher From API Without User Inputs
 """)
 api_options = [
@@ -135,7 +116,7 @@ api_options = [
 api_url = st.selectbox('API Selection', api_options)
 
 if st.button("Test API"):
-    response = requests.get(api_url, timeout=5)
+    response = requests.get(api_url, timeout=10)
     image_list = response.json().get("image_list")
     image_array = np.array(image_list, dtype=np.uint8)
     image =  Image.fromarray(image_array)
