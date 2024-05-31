@@ -5,7 +5,6 @@ from PIL import Image
 import requests
 import leafmap
 import random
-from streamlit_extras.grid import grid
 import streamlit_nested_layout
 
 
