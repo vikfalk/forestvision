@@ -1,11 +1,7 @@
 streamlit
 pydeck
-streamlit
 datetime
-pydeck
-PIL
+Pillow
 requests
 leafmap
-random
-streamlit_extras.grid
 streamlit_nested_layout
