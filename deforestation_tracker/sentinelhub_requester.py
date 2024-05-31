@@ -16,7 +16,7 @@ from sentinelhub import (
     SentinelHubCatalog
 
 )
-from model.utils import timeframe_constructor
+from deforestation_tracker.utils import timeframe_constructor
 
 def box_from_point(lat_deg, lon_deg, image_size_px = 512, resolution_m_per_px = 10):
     """
@@ -158,31 +158,29 @@ def request_image(box, image_size_px, resolution_m_per_px, time_interval, config
         size=[image_size_px, image_size_px],
         config=config
     )
-    print('sending request')
     return request.get_data()[0]
 
 
 if __name__ == '__main__':
 
-    # # Defining request parameters
-    # lat_deg = -8.48638
-    # lon_deg = -55.26209
-    # time_interval = ('2024-04-28', '2024-05-28')
-    # date_requested = '2020-05-10'
+    # Defining request parameters
+    lat_deg = -8.48638
+    lon_deg = -55.26209
+    time_interval = ('2024-04-28', '2024-05-28')
+    date_requested = '2020-05-10'
 
-    # config, catalog = sentinelhub_authorization()
+    config, catalog = sentinelhub_authorization()
 
-    # box = box_from_point(lat_deg=lat_deg, lon_deg=lon_deg, image_size_px=512, resolution_m_per_px=10)
-    # optimal_tile = search_available_L2A_tiles(catalog=catalog, bbox=box, date_request=date_requested, range_days=92, maxCloudCoverage=10)
-    # if optimal_tile:
-    #     print('opt tile found')
-    #     optimal_date = optimal_tile.get('date')
-    #     print(request_image(
-    #                         box=box,
-    #                         image_size_px=512,
-    #                         resolution_m_per_px=10,
-    #                         config=config,
-    #                         time_interval=(optimal_date, optimal_date),
-    #                         request_type='TrueColor'
-    #                         ).flatten().mean()
-    #         )
+    box = box_from_point(lat_deg=lat_deg, lon_deg=lon_deg, image_size_px=512, resolution_m_per_px=10)
+    optimal_tile = search_available_L2A_tiles(catalog=catalog, bbox=box, date_request=date_requested, range_days=92, maxCloudCoverage=10)
+    if optimal_tile:
+        optimal_date = optimal_tile.get('date')
+        print(request_image(
+                            box=box,
+                            image_size_px=512,
+                            resolution_m_per_px=10,
+                            config=config,
+                            time_interval=(optimal_date, optimal_date),
+                            request_type='TrueColor'
+                            ).flatten().mean()
+            )
