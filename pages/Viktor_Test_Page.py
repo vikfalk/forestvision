@@ -4,6 +4,7 @@ import pydeck as pdk
 from PIL import Image
 import requests
 import random
+import numpy as np
 
 if 'forest_loss' not in st.session_state:
     st.session_state.forest_loss_start = 0.0

@@ -1,2 +1,7 @@
 streamlit
 pydeck
+numpy
+datetime
+pillow
+requests
+random
