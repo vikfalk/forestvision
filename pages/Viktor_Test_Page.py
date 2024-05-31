@@ -3,7 +3,7 @@ import datetime as dt
 import pydeck as pdk
 from PIL import Image
 import requests
-import leafmap
+# import leafmap
 import random
 from streamlit_extras.grid import grid
 import streamlit_nested_layout
