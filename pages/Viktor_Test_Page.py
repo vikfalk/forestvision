@@ -6,6 +6,7 @@ import requests
 import leafmap
 import random
 import streamlit_nested_layout
+import numpy as np
 
 
 if 'forest_loss' not in st.session_state:
@@ -60,20 +61,58 @@ with inputcol2:
     }
     st.markdown('-----')
     st.markdown('###')
-    if st.button('Calculate Change') and all(params.values()):
-        response = requests.get(url=API_URL, params=params, timeout=5)
-        prediction_json = response.json()
-        prediction = round(prediction_json["change"], 2)
-        prediction_string = format(prediction, '.2f')
-        # st.markdown(f"""
-        #             In the specified plot of land,
-        #             the rainforest area was reduced by {prediction_string} %
-        #             between {start_timeframe} and {end_timeframe}.
-        #             """)
+    
+    api_options = [
+    "http://localhost:8000/get_image",
+    "http://localhost:8000/get_complex_image",
+    "http://localhost:8000/get_image_from_model",
+    "http://localhost:8000/get_image_from_satellite"
+]
+    api_url = st.selectbox('API Selection', api_options)
+
+    if st.button("Test API"):
+        response = requests.get(api_url, timeout=5)
+        image_list = response.json().get("image_list")
+        image_array = np.array(image_list, dtype=np.uint8)
+        image =  Image.fromarray(image_array)
         
         st.session_state.forest_loss_start = round(random.uniform(3.1, 6), 2)
         st.session_state.forest_loss_end = round(st.session_state.forest_loss_start - round(random.uniform(2, 3), 2))
-        st.session_state.test_img = 'image_postproc/smoothed_png.png'
+        #st.session_state.test_image = image
+    
+    param_api = "http://localhost:8000/get_image_from_satellite_with_params"
+    if st.button("Test Input Sensitive API"):
+        response = requests.get(url=param_api, params=params, timeout=5)
+        image_list = response.json().get("image_list")
+        image_array = np.array(image_list, dtype=np.uint8)
+        image =  Image.fromarray(image_array)
+        if image:
+                st.image(image, caption="Fetched Image")
+        
+    
+    
+    
+    
+        # if image:
+        #         st.image(image, caption="Fetched Image")
+    
+    
+    # if st.button('Calculate Change') and all(params.values()):
+    #     response = requests.get(url=API_URL, params=params, timeout=5)
+    #     prediction_json = response.json()
+    #     prediction = round(prediction_json["change"], 2)
+    #     prediction_string = format(prediction, '.2f')
+        
+    #     # st.markdown(f"""
+    #     #             In the specified plot of land,
+    #     #             the rainforest area was reduced by {prediction_string} %
+    #     #             between {start_timeframe} and {end_timeframe}.
+    #     #             """)
+        
+    #     st.session_state.forest_loss_start = round(random.uniform(3.1, 6), 2)
+    #     st.session_state.forest_loss_end = round(st.session_state.forest_loss_start - round(random.uniform(2, 3), 2))
+    #     st.session_state.test_img = 'image_postproc/smoothed_png.png'
+    
 
 with output_col:
     tab1, tab2, tab3, tab4 = st.tabs(['Forest Loss', 'Sat Images', 'Masks', 'Test'])
@@ -135,7 +174,7 @@ with output_col:
             st.markdown('#')
             st.markdown('End')
         with col2:
-            st.image('pages/final_overlay_image.png', width=190)
+            #st.image(st.session_state.test_image, width=190)
             st.image('pages/final_overlay_image.png', width=190)
         
     
@@ -204,16 +243,6 @@ with map_col:
         layers=[polygon_layer, bitmap_layer],  # Add both layers
         tooltip={"text": "{name}"}
     ))
-
-
-
-
-
-
-
-
-
-
 
 
 # st.markdown("#")   
