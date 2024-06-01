@@ -1,7 +1,13 @@
 from PIL import Image, ImageFilter
 import numpy as np
 import cv2
-def smooth_and_vectorize(array, smoothing):
+
+def smooth_and_vectorize(array, smoothing, colour_and_opacity):
+    '''
+    Takes the model output array, smooths, colours, defines opacity, and makes background transparent.
+    smoothing = odd int e.g. 1, 3, 5, 7
+    colour_and_opacity = tuple with RGBA e.g. for red with full opacity -> (255, 0, 0, 255)
+    '''
     # Convert numpy array to PIL Image
     array_rgba = np.zeros((512, 512, 4), dtype=np.uint8)
     array_rgba[:, :, 0] = array  # Copy the grayscale values to all RGB channels
