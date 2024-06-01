@@ -5,14 +5,17 @@ from PIL import Image
 import requests
 import random
 import numpy as np
+from deforestation_frontend.processing.frontend_processing import smooth_and_vectorize
+from io import BytesIO
 
 if 'forest_loss' not in st.session_state:
     st.session_state.forest_loss_start = 0.0
     st.session_state.forest_loss_end = 0.0
     st.session_state.forest_loss_final = 0.0
     st.session_state.test_img = None
+    st.session_state.end_vector_overlay = None
+    st.session_state.end_mask_png = None
 
-API_URL = 'http://localhost:8000/calculate_change'
 
 st.set_page_config(
     page_title="Deforestation Tracker",
@@ -41,7 +44,7 @@ with input_col1:
                                 format_func=lambda x: labels[x])
     st.markdown('-----')
     st.markdown('#')
-    st.markdown('Click for magic ->')
+    st.markdown('Click for magic')
 
 with inputcol2:    
     longitude_input = float(st.text_input('Longitude', '-55.26000'))
@@ -58,40 +61,67 @@ with inputcol2:
     }
     st.markdown('-----')
     st.markdown('###')
-    
-    api_options = [
-    "http://localhost:8000/get_image",
-    "http://localhost:8000/get_complex_image",
-    "http://localhost:8000/get_image_from_model",
-    "http://localhost:8000/get_image_from_satellite"
-]
-    api_url = st.selectbox('API Selection', api_options)
 
-    if st.button("Test API"):
-        response = requests.get(api_url, timeout=5)
-        image_list = response.json().get("image_list")
-        image_array = np.array(image_list, dtype=np.uint8)
-        image =  Image.fromarray(image_array)
+    everything_api = "http://localhost:8000/do_everything"
+    if st.button("Do Everything"):        
+        response = requests.get(url=everything_api, params=params, timeout=10)
         
-        st.session_state.forest_loss_start = round(random.uniform(3.1, 6), 2)
-        st.session_state.forest_loss_end = round(st.session_state.forest_loss_start - round(random.uniform(2, 3), 2))
-        #st.session_state.test_image = image
+        # image_list = response.json().get("image_list")
+        # image_array = np.array(image_list, dtype=np.uint8)
+        # image =  Image.fromarray(image_array)
+        # if image:
+        #         st.image(image, caption="Fetched Image")
+        
+        #End Mask
+        end_mask_image_list = response.json().get("end_mask_image_list")
+        end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
+        end_mask =  Image.fromarray(end_mask_image_array)
+        if end_mask:
+                st.image(end_mask, caption= 'End mask')
+        # st.markdown(end_mask_image_array.shape)
+        # st.markdown(end_mask_image_array)
+        
+        #End Sat
+        end_sat_image_list = response.json().get("end_sat_image_list")
+        end_sat_image_array = np.array(end_sat_image_list, dtype=np.uint8)
+        end_sat =  Image.fromarray(end_sat_image_array)
+        if end_sat:
+            st.image(end_sat, caption= 'End sat')
     
+                
+        # #End png
+        # end_mask_image_list = response.json().get("end_mask_image_list")
+        # end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
+        # end_mask_vector = smooth_and_vectorize_array(end_mask_image_array, 5, '#00FF00')
+        # if end_mask_vector:
+        #     st.image(end_sat, caption= 'End vector')
+        
+        #End vector
+        end_mask_image_list = response.json().get("end_mask_image_list")
+        end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
+        end_mask_vector = smooth_and_vectorize(end_mask_image_array, 5)
+        st.session_state.end_vector_overlay = end_mask_vector
+
+        if end_mask_vector:
+            st.image(end_mask_vector, caption= 'End vector')
+     
+     
+     
+     
+     
+     
+     
+     
     param_api = "http://localhost:8000/get_image_from_satellite_with_params"
     if st.button("Test Input Sensitive API"):
-        response = requests.get(url=param_api, params=params, timeout=5)
+        response = requests.get(url=param_api, params=params, timeout=10)
         image_list = response.json().get("image_list")
         image_array = np.array(image_list, dtype=np.uint8)
         image =  Image.fromarray(image_array)
         if image:
                 st.image(image, caption="Fetched Image")
-        
-    
-    
-    
-    
-        # if image:
-        #         st.image(image, caption="Fetched Image")
+  
+
     
     
     # if st.button('Calculate Change') and all(params.values()):
@@ -209,6 +239,16 @@ polygon_data = [{
     "name": "Deforestation Area"
 }]
 
+# Convert end_mask_vector to pydeck polygon layer
+end_mask_polygon_layer = pdk.Layer(
+    "PolygonLayer", 
+    data=None, 
+    get_polygon=st.session_state.end_vector_overlay,
+    get_line_color=[255, 0, 0, 255],  # Red color with full opacity for the border
+    get_line_width=1,  # Width of the border
+)
+
+
 polygon_layer = pdk.Layer(
     'PolygonLayer',
     data=polygon_data,
@@ -221,26 +261,35 @@ polygon_layer = pdk.Layer(
 )
 
 # Path to the PNG image
-IMG_URL = '/Users/viktor/code/vikfalk/deforestation/deforestation_frontend/image_postproc/smoothed_png.png'
 BOUNDS = square_coords
 
+# Retrieve the vectorized mask image from the session state
+end_mask_vector = st.session_state.end_vector_overlay
+
+# Convert the vectorized mask image to PNG format
+if end_mask_vector:
+    buffer = BytesIO()
+    end_mask_vector.save(buffer, format="PNG")
+    st.session_state.end_mask_png = buffer.getvalue()
+
+
+# Create a BitmapLayer to overlay the PNG image on the map
 bitmap_layer = pdk.Layer(
     "BitmapLayer", 
     data=None, 
-    image=st.session_state.test_img, 
+    image=st.session_state.end_mask_png, 
     bounds=BOUNDS, 
-    opacity=0.5
+    opacity=0.5  # Adjust opacity as needed
 )
-# Place the map in the second column
 
+# Place the BitmapLayer in the list of layers when creating the pydeck Deck object
 with map_col:
     st.pydeck_chart(pdk.Deck(
         map_style='mapbox://styles/mapbox/satellite-v9',
         initial_view_state=view_state,
-        layers=[polygon_layer, bitmap_layer],  # Add both layers
+        layers=[polygon_layer],  # Add the BitmapLayer here
         tooltip={"text": "{name}"}
     ))
-
 
 # st.markdown("#")   
 # st.markdown("#")
@@ -250,6 +299,15 @@ with map_col:
 # st.markdown("------")
 # st.markdown("### Output")
 
+
+# bitmap_layer = pdk.Layer(
+#     "BitmapLayer", 
+#     data=None, 
+#     image=st.session_state.test_img, 
+#     bounds=BOUNDS, 
+#     opacity=0.5
+# )
+# # Place the map in the second column
 
 # sat_col, forest_col, overlay_col, metrics_col = st.columns([1, 1, 3, 2])
 
