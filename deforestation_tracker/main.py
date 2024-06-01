@@ -54,7 +54,7 @@ def get_image_from_satellite_with_params(
     latitude: str,
     sample_number: str,  # TODO: Pay attention to unused inputs.
     square_size: str):  # TODO: Pay attention to unused inputs.
-    image_list = float(latitude), float(longitude), end_timeframe
+    
     model = load_model('./deforestation_tracker/model_ressources/unet-attention-3d.hdf5')
     image_array = load_img_array_from_satellite(
         lat_deg=float(latitude),
@@ -86,6 +86,39 @@ def generic_param_api(
 
     return JSONResponse(content={"param_list": param_list})
 
+@api_app.get("/do_everything")
+def do_everything(
+    start_timeframe: str,  # TODO: Pay attention to unused inputs.
+    end_timeframe: str,
+    longitude: str,
+    latitude: str,
+    sample_number: str,  # TODO: Pay attention to unused inputs.
+    square_size: str):  # TODO: Pay attention to unused inputs.
+    
+    model = load_model('./deforestation_tracker/model_ressources/unet-attention-3d.hdf5')
+    
+    #End sat pull
+    end_sat_image_array = load_img_array_from_satellite(
+        lat_deg=float(latitude),
+        lon_deg=float(longitude),
+        end_timeframe=str(end_timeframe)  # assuming format "2023-02-03"
+    )
+    
+    #End sat present
+    end_sat_image_list = end_sat_image_array.tolist()
+    
+    #End mask present
+    end_mask_image_array = segment(end_sat_image_list, model)
+    end_mask_image_list = end_mask_image_array.tolist()
+    
+    
+    return JSONResponse(content={"end_mask_image_list": end_mask_image_list,
+                                 "end_sat_image_list": end_sat_image_list
+                                 })
+    
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(api_app, host="0.0.0.0", port=int(os.environ["API_PORT"]))
+
