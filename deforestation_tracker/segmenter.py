@@ -28,7 +28,7 @@ def segment(img_array: np.array, model) -> np.array:
     return cropped_img_array
 
 
-def segment(img_array: np.array, model) -> np.array:
+def segment_self(img_array: np.array, model) -> np.array:
     """Takes a scaled image array, predicts its rainforest segmentation, converts it
     to black and white and crops the images white padding. Returns a numpy
     array representing the image.
