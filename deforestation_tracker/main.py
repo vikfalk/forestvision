@@ -53,7 +53,7 @@ def do_everything(
     model = load_model('./deforestation_tracker/model_ressources/unet-attention-3d.hdf5')
 
     #End sat pull
-    end_sat_image_array = load_img_array_from_satellite(
+    end_sat_image_array, request_info_date = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
         end_timeframe=str(end_timeframe)  # assuming format "2023-02-03"
@@ -69,6 +69,7 @@ def do_everything(
 
     return JSONResponse(content={"end_mask_image_list": end_mask_image_list,
                                  "end_sat_image_list": end_sat_image_list,
+                                 'request_info_date':request_info_date,
                                  "test": end_mask_image_list
                                  })
 
