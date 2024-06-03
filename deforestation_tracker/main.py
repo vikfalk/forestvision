@@ -113,11 +113,10 @@ def do_everything(
     
     
     return JSONResponse(content={"end_mask_image_list": end_mask_image_list,
-                                 "end_sat_image_list": end_sat_image_list
+                                 "end_sat_image_list": end_sat_image_list, 
+                                 "test": end_mask_image_list
                                  })
     
-
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(api_app, host="0.0.0.0", port=int(os.environ["API_PORT"]))
