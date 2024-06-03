@@ -31,8 +31,11 @@ Fetch_Sentinel_Image.ipynb
 #env file
 .env
 .envrc
+env.yaml
 # data
 segmented_output_files/
 raw_data/
 #Viktor extra code
 viktor_code.py
+# Python version
+.python-version
