@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from deforestation_tracker.segmenter import segment
+from deforestation_tracker.segmenter import segment, segment_self
 from deforestation_tracker.image_array_loaders import load_img_array_from_satellite, load_img_array_locally
 
 # INSTRUCTION:
@@ -82,10 +82,49 @@ def generic_param_api(
         "longitude": longitude,
         "latitude": latitude,
         "sample_number": sample_number,
-        "square_siz": square_size
+        "square_size": square_size
     }
 
     return JSONResponse(content={"param_list": param_list})
+
+# Selfmade model endpoints
+
+@api_app.get("/get_image_from_satellite_self")
+def get_image_from_satellite():
+    model = load_model('./deforestation_tracker/model_ressources/att_unet4d_selfmade.hdf5')
+    image_array = load_img_array_from_satellite(request_type='4-band')
+    # Scale image array to have the same scale as training images that have been
+    # preprocessed with rasterio
+    max_values = np.max(image_array, axis=(0, 1))
+    image_array = image_array / max_values
+    image_array = segment_self(image_array, model)
+    image_list = image_array.tolist()
+    return JSONResponse(content={"image_list": image_list})
+
+@api_app.get("/get_image_from_satellite_with_params_self")
+def get_image_from_satellite_with_params(
+    start_timeframe: str,  # TODO: Pay attention to unused inputs.
+    end_timeframe: str,
+    longitude: str,
+    latitude: str,
+    sample_number: str,  # TODO: Pay attention to unused inputs.
+    square_size: str):  # TODO: Pay attention to unused inputs.
+    image_list = float(latitude), float(longitude), end_timeframe
+    model = load_model('./deforestation_tracker/model_ressources/att_unet4d_selfmade.hdf5')
+    image_array = load_img_array_from_satellite(
+        lat_deg=float(latitude),
+        lon_deg=float(longitude),
+        end_timeframe=str(end_timeframe),  # assuming format "2023-02-03"
+        request_type='4-band'
+    )
+    # Scale image array to have the same scale as training images that have been
+    # preprocessed with rasterio
+    max_values = np.max(image_array, axis=(0, 1))
+    image_array = image_array / max_values
+    image_array = segment_self(image_array, model)
+    image_list = image_array.tolist()
+    return JSONResponse(content={"image_list": image_list})
+
 
 if __name__ == "__main__":
     import uvicorn

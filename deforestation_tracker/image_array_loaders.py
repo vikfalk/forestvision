@@ -3,15 +3,13 @@ from deforestation_tracker.utils import path_constructor, timeframe_constructor
 from PIL import Image
 import numpy as np
 
-
 def load_img_array_from_satellite(
         lat_deg: float = -8.48638,
         lon_deg: float = -55.26209,
         end_timeframe: str = "2024-05-30",
-        request_type: str = "TrueColor"
-        ) -> np.array:
-    """Searches for available tiles at the requested date,
-    then downloads the best image array. Returns array and date."""
+        request_type: str = "TrueColor") -> np.array:
+    """Loads a satellite image array from sentinel hub, scales it and returns it."""
+
 
     # time_interval_6m = timeframe_constructor(end_timeframe, temporal_padding=91)
 
