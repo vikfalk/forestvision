@@ -79,7 +79,6 @@ def do_everything(
     start_mask_image_array = segment(start_sat_image_list, model)
     start_mask_image_list = start_mask_image_array.tolist()
 
-
     return JSONResponse(content={"end_mask_image_list": end_mask_image_list,
                                  "end_sat_image_list": end_sat_image_list,
                                  "start_mask_image_list": start_mask_image_list,
