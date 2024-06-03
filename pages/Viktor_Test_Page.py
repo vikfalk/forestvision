@@ -67,22 +67,6 @@ with inputcol2:
     st.markdown('-----')
     st.markdown('###')
     
-    test_api = "http://localhost:8000/test"
-    if st.button("Test"):        
-            response = requests.get(url=test_api)
-            test = response.json().get("test")
-            st.markdown(test)
-    
-    
-    param_api_url = "http://localhost:8080/get_image_from_satellite_with_params"
-    if st.button("Test Input Sensitive API"):
-        response = requests.get(url=param_api_url, params=params, timeout=60)
-
-        segmented_image_list = response.json().get("segmented_image_list")
-        image_array = np.array(segmented_image_list, dtype=np.uint8)
-        st.image(image_array, caption="Segmented Image")
-        
-    
     everything_api = "http://localhost:8080/do_everything"
     if st.button("Do Everything"):        
         response = requests.get(url=everything_api, params=params, timeout=10)
@@ -90,12 +74,8 @@ with inputcol2:
         #End Mask
         end_mask_image_list = response.json().get("end_mask_image_list")
         end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
-        st.markdown(end_mask_image_array)
         st.session_state.end_mask = end_mask_image_array
-
-        # if end_mask:
-        #         st.image(end_mask, caption= 'End mask')                
-    
+        
         #End Sat
         end_sat_image_list = response.json().get("end_sat_image_list")
         end_sat_image_array = np.array(end_sat_image_list, dtype=np.uint8)
@@ -103,8 +83,8 @@ with inputcol2:
         st.session_state.end_sat = end_sat
         
         
-        original_image_array = np.array(end_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
-        st.image(original_image_array)
+        end_sat_image_array = np.array(end_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+        st.session_state.end_sat = end_sat_image_array
         
         # #rREPONSE WITH INFORMATION
 
@@ -114,7 +94,7 @@ with inputcol2:
         st.session_state.end_vector_overlay = end_mask_vector
             
         #End overlay
-        end_overlay = overlay_vector_on_mask(end_mask_vector, end_sat)
+        end_overlay = overlay_vector_on_mask(end_mask_vector, end_sat_image_array)
         st.session_state.end_overlay = end_overlay
         
         # End metrics
