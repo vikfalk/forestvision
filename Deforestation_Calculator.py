@@ -90,7 +90,8 @@ params = {
 # API Stuff
 st.title("Fetch Image from Satellite Using User Inputs")
 
-cloud_base_url = "https://deforestation-tracker-llzimbumzq-oe.a.run.app"
+# cloud_base_url = "https://deforestation-tracker-llzimbumzq-oe.a.run.app"  # buster image
+cloud_base_url = "https://defotra-llzimbumzq-oe.a.run.app" # slim image
 local_base_url = "http://localhost:8080"
 param_api_options = [
     f"{local_base_url}/get_image_from_satellite_with_params",
