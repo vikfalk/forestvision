@@ -50,13 +50,14 @@ def sentinelhub_authorization():
 
 
 
-def search_available_L2A_tiles(catalog, bbox:'bounding box', date_request, range_days=92, maxCloudCoverage=10)->(dict|None):
+def search_available_L2A_tiles(catalog, bbox:'bounding box', date_request, range_days=91, maxCloudCoverage=10)->(dict|None):
     """
     searches for available images from the desired area with less than 10% cloud coverage
     then chooses the image which minimizes penalty = 10 * cloud_coverage + timedelta
-    RETURNS a dict with the best tile, or None if no images are available
+    RETURNS a dict with the best tile, or None if no images are available. Example:
+    {'id': 'S2B_MSIL2A_20200615T140059_N0214_R067_T21LXL_20200615T180658', 'date': '2020-06-15', 'cloud_cover': 0.03, 'penalty': 37.3}
     """
-    time_interval = timeframe_constructor(date_request, temporal_padding=91)
+    time_interval = timeframe_constructor(date_request, temporal_padding=range_days)
     # search the sentinel2 data
     results = list(
         catalog.search(
