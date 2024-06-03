@@ -56,7 +56,7 @@ def get_image_from_satellite_with_params(
     square_size: str):  # TODO: Pay attention to unused inputs.
     image_list = float(latitude), float(longitude), end_timeframe
     model = load_model('./deforestation_tracker/model_ressources/unet-attention-3d.hdf5')
-    image_array, request_info = load_img_array_from_satellite(
+    image_array, request_info_date = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
         end_timeframe=str(end_timeframe)  # assuming format "2023-02-03"
