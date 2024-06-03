@@ -5,8 +5,10 @@ from PIL import Image
 import requests
 import random
 import numpy as np
-from deforestation_frontend.processing.frontend_processing import smooth_and_vectorize
+from processing.frontend_processing import smooth_and_vectorize, overlay_vector_on_mask
 from io import BytesIO
+
+placeholder_image = Image.new("RGB", (512, 512), (15, 17, 22))
 
 if 'forest_loss' not in st.session_state:
     st.session_state.forest_loss_start = 0.0
@@ -14,8 +16,11 @@ if 'forest_loss' not in st.session_state:
     st.session_state.forest_loss_final = 0.0
     st.session_state.test_img = None
     st.session_state.end_vector_overlay = None
-    st.session_state.end_mask_png = None
-
+    st.session_state.end_mask = placeholder_image
+    st.session_state.end_forest_cover_percent = 0.0
+    st.session_state.end_sat = placeholder_image
+    st.session_state.end_overlay = placeholder_image
+    st.session_state.end_forest_cover_percent_int = 0
 
 st.set_page_config(
     page_title="Deforestation Tracker",
@@ -66,63 +71,35 @@ with inputcol2:
     if st.button("Do Everything"):        
         response = requests.get(url=everything_api, params=params, timeout=10)
         
-        # image_list = response.json().get("image_list")
-        # image_array = np.array(image_list, dtype=np.uint8)
-        # image =  Image.fromarray(image_array)
-        # if image:
-        #         st.image(image, caption="Fetched Image")
-        
         #End Mask
         end_mask_image_list = response.json().get("end_mask_image_list")
         end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
-        end_mask =  Image.fromarray(end_mask_image_array)
-        if end_mask:
-                st.image(end_mask, caption= 'End mask')
-        # st.markdown(end_mask_image_array.shape)
-        # st.markdown(end_mask_image_array)
-        
+        st.session_state.end_mask = end_mask_image_array
+        st.image(end_mask_image_array)
+
+        # if end_mask:
+        #         st.image(end_mask, caption= 'End mask')                
+    
         #End Sat
         end_sat_image_list = response.json().get("end_sat_image_list")
         end_sat_image_array = np.array(end_sat_image_list, dtype=np.uint8)
         end_sat =  Image.fromarray(end_sat_image_array)
-        if end_sat:
-            st.image(end_sat, caption= 'End sat')
-    
-                
-        # #End png
-        # end_mask_image_list = response.json().get("end_mask_image_list")
-        # end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
-        # end_mask_vector = smooth_and_vectorize_array(end_mask_image_array, 5, '#00FF00')
-        # if end_mask_vector:
-        #     st.image(end_sat, caption= 'End vector')
-        
+        st.session_state.end_sat = end_sat
+
         #End vector
-        end_mask_image_list = response.json().get("end_mask_image_list")
-        end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
-        end_mask_vector = smooth_and_vectorize(end_mask_image_array, 5)
+        end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#FF0000', 0.4)
         st.session_state.end_vector_overlay = end_mask_vector
-
-        if end_mask_vector:
-            st.image(end_mask_vector, caption= 'End vector')
-     
-     
-     
-     
-     
-     
-     
-     
-    param_api = "http://localhost:8000/get_image_from_satellite_with_params"
-    if st.button("Test Input Sensitive API"):
-        response = requests.get(url=param_api, params=params, timeout=10)
-        image_list = response.json().get("image_list")
-        image_array = np.array(image_list, dtype=np.uint8)
-        image =  Image.fromarray(image_array)
-        if image:
-                st.image(image, caption="Fetched Image")
-  
-
-    
+            
+        #End overlay
+        end_overlay = overlay_vector_on_mask(end_mask_vector, end_sat)
+        st.session_state.end_overlay = end_overlay
+        
+        # End metrics
+        end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array == 0) / end_mask_image_array.size) * 100), 1)
+        st.session_state.end_forest_cover_percent = end_forest_cover_percent
+        st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
+        
+        end_forest_cover_ha = (end_forest_cover_percent/100)*26,214,400
     
     # if st.button('Calculate Change') and all(params.values()):
     #     response = requests.get(url=API_URL, params=params, timeout=5)
@@ -135,7 +112,7 @@ with inputcol2:
     #     #             the rainforest area was reduced by {prediction_string} %
     #     #             between {start_timeframe} and {end_timeframe}.
     #     #             """)
-        
+    
     #     st.session_state.forest_loss_start = round(random.uniform(3.1, 6), 2)
     #     st.session_state.forest_loss_end = round(st.session_state.forest_loss_start - round(random.uniform(2, 3), 2))
     #     st.session_state.test_img = 'image_postproc/smoothed_png.png'
@@ -163,8 +140,13 @@ with output_col:
         st.markdown('End date forest area')
 
         box_width_end = st.session_state.forest_loss_end * WIDTH_FACTOR
-        st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #FF4B4B; border-radius: 10px; width: {box_width_end}px; height: 50px; padding: 5px">'
-                    f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0;">{st.session_state.forest_loss_end}</p>'
+        # box_width_end = 250  # Remove this line, as we will now calculate the width dynamically
+        # Add the following line to set the width to 80% of the "Total deforestation" box's width
+        # Use inline styling to set the width dynamically
+        
+        
+        st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #FF4B4B; border-radius: 10px; width: {st.session_state.end_forest_cover_percent_int}%; height: 50px; padding: 5px">'
+                    f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.end_forest_cover_percent}%</p>'
                     '</div>', unsafe_allow_html=True)
 
         st.markdown("###")
@@ -184,14 +166,14 @@ with output_col:
             st.markdown('#')
             st.markdown('#')
             st.markdown('End')
-        with col2:
-            fn = '/Users/viktor/code/vikfalk/deforestation/deforestation_frontend/images/after_resized_satellite.tiff'
-            image = Image.open(fn)
-            st.image(image, width=190)
+        # with col2:
+        #     fn = '/Users/viktor/code/vikfalk/deforestation/deforestation_frontend/images/after_resized_satellite.tiff'
+        #     image = Image.open(fn)
+        #     st.image(image, width=190)
             
-            fn = '/Users/viktor/code/vikfalk/deforestation/deforestation_frontend/images/after_resized_satellite.tiff'
-            image = Image.open(fn)
-            st.image(image, width=190)
+            # fn = '/Users/viktor/code/vikfalk/deforestation/deforestation_frontend/images/after_resized_satellite.tiff'
+            # image = Image.open(fn)
+            # st.image(image, width=190)
     
     with tab3:
         col1, col2, col3 = st.columns(3)
@@ -200,9 +182,9 @@ with output_col:
             st.markdown('#')
             st.markdown('#')
             st.markdown('End')
-        with col2:
-            #st.image(st.session_state.test_image, width=190)
-            st.image('pages/final_overlay_image.png', width=190)
+        # with col2:
+        #     #st.image(st.session_state.test_image, width=190)
+        #     st.image('pages/final_overlay_image.png', width=190)
         
     
     # with tab4:
@@ -266,21 +248,21 @@ BOUNDS = square_coords
 # Retrieve the vectorized mask image from the session state
 end_mask_vector = st.session_state.end_vector_overlay
 
-# Convert the vectorized mask image to PNG format
-if end_mask_vector:
-    buffer = BytesIO()
-    end_mask_vector.save(buffer, format="PNG")
-    st.session_state.end_mask_png = buffer.getvalue()
+# # Convert the vectorized mask image to PNG format
+# if end_mask_vector:
+#     buffer = BytesIO()
+#     end_mask_vector.save(buffer, format="PNG")
+#     st.session_state.end_mask_png = buffer.getvalue()
 
 
-# Create a BitmapLayer to overlay the PNG image on the map
-bitmap_layer = pdk.Layer(
-    "BitmapLayer", 
-    data=None, 
-    image=st.session_state.end_mask_png, 
-    bounds=BOUNDS, 
-    opacity=0.5  # Adjust opacity as needed
-)
+# # Create a BitmapLayer to overlay the PNG image on the map
+# bitmap_layer = pdk.Layer(
+#     "BitmapLayer", 
+#     data=None, 
+#     image=st.session_state.end_mask_png, 
+#     bounds=BOUNDS, 
+#     opacity=0.5  # Adjust opacity as needed
+# )
 
 # Place the BitmapLayer in the list of layers when creating the pydeck Deck object
 with map_col:
@@ -291,13 +273,8 @@ with map_col:
         tooltip={"text": "{name}"}
     ))
 
-# st.markdown("#")   
-# st.markdown("#")
-# st.markdown("#")
-# st.markdown("#")
-# st.markdown("#") 
-# st.markdown("------")
-# st.markdown("### Output")
+st.markdown("------")
+st.markdown("### Output")
 
 
 # bitmap_layer = pdk.Layer(
@@ -309,29 +286,25 @@ with map_col:
 # )
 # # Place the map in the second column
 
-# sat_col, forest_col, overlay_col, metrics_col = st.columns([1, 1, 3, 2])
+sat_col, forest_col, overlay_col, metrics_col = st.columns([1, 1, 3, 2])
 
-# with sat_col:
-#     st.markdown("##### Start date")
-#     st.markdown("Satellite image")
-#     fn = '/Users/viktor/code/vikfalk/deforestation/deforestation_frontend/images/after_resized_satellite.tiff'
-#     image = Image.open(fn)
-#     st.image(image)
+with sat_col:
+    st.markdown("##### Start date")
+    st.markdown("Satellite image")
+    st.image(st.session_state.end_sat)
+        
+    st.markdown("##### End date")
+    st.markdown("Satellite image")
+    st.image(st.session_state.end_sat)
     
-#     st.markdown("##### End date")
-#     st.markdown("Satellite image")
-#     fn = '/Users/viktor/code/vikfalk/deforestation/deforestation_frontend/images/after_resized_satellite.tiff'
-#     image = Image.open(fn)
-#     st.image(image)
+with forest_col:
+    st.markdown('<p style="color: #0F1116; ">filler</p>', unsafe_allow_html=True)
+    st.markdown("Forest area")
+    st.image(st.session_state.end_overlay)
     
-# with forest_col:
-#     st.markdown('<p style="color: #0F1116; ">filler</p>', unsafe_allow_html=True)
-#     st.markdown("Forest area")
-#     st.image('/Users/viktor/code/vikfalk/deforestation/deforestation_frontend/image_postproc/final_overlay_image.png')
-    
-#     st.markdown('<p style="color: #0F1116; ">filler</p>', unsafe_allow_html=True)
-#     st.markdown("Forest area")
-#     st.image('/Users/viktor/code/vikfalk/deforestation/deforestation_frontend/image_postproc/final_overlay_image.png')
+    st.markdown('<p style="color: #0F1116; ">filler</p>', unsafe_allow_html=True)
+    st.markdown("Forest area")
+    st.image(st.session_state.end_overlay)
 
 # with overlay_col:
 #     st.markdown("#### Change in forest area")
