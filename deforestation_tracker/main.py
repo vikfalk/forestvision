@@ -1,5 +1,5 @@
-import os
 from tensorflow.keras.models import load_model
+import os
 import numpy as np
 from PIL import Image
 from fastapi import FastAPI
@@ -11,13 +11,13 @@ from deforestation_tracker.image_array_loaders import load_img_array_from_satell
 # Run this file, triggering the __main__ function.
 # Go to "http://localhost:8080/docs" to test it out.
 
-api_app = FastAPI()
+app = FastAPI()
 
-@api_app.get('/')
+@app.get('/')
 def index():
     return {'api status': "running"}
 
-@api_app.get("/get_image_from_satellite_with_params")
+@app.get("/get_image_from_satellite_with_params")
 def get_image_from_satellite_with_params(
     start_timeframe: str,
     end_timeframe: str,
@@ -41,7 +41,7 @@ def get_image_from_satellite_with_params(
                                  "segmented_image_list": image_list,
                                  "request_info_date": request_info_date})
 
-@api_app.get("/do_everything")
+@app.get("/do_everything")
 def do_everything(
     start_timeframe: str,  # TODO: Pay attention to unused inputs.
     end_timeframe: str,
@@ -75,7 +75,7 @@ def do_everything(
 
 # Selfmade model endpoints
 
-@api_app.get("/get_image_from_satellite_self")
+@app.get("/get_image_from_satellite_self")
 def get_image_from_satellite():
     model = load_model('./deforestation_tracker/model_ressources/att_unet4d_selfmade.hdf5')
     image_array = load_img_array_from_satellite(request_type='4-band')
@@ -87,7 +87,7 @@ def get_image_from_satellite():
     image_list = image_array.tolist()
     return JSONResponse(content={"image_list": image_list})
 
-@api_app.get("/get_image_from_satellite_with_params_self")
+@app.get("/get_image_from_satellite_with_params_self")
 def get_image_from_satellite_with_params_self(
     start_timeframe: str,  # TODO: Pay attention to unused inputs.
     end_timeframe: str,
@@ -114,4 +114,4 @@ def get_image_from_satellite_with_params_self(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(api_app, host="0.0.0.0", port=int(os.environ["PORT"]))
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ["PORT"]))
