@@ -1,7 +1,7 @@
 streamlit
 pydeck
+numpy
 datetime
-Pillow
+pillow
 requests
-leafmap
-streamlit_nested_layout
+random
