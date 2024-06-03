@@ -53,24 +53,39 @@ def do_everything(
     model = load_model('./deforestation_tracker/model_ressources/unet-attention-3d.hdf5')
 
     #End sat pull
-    end_sat_image_array, request_info_date = load_img_array_from_satellite(
+    end_sat_image_array, end_date_info = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
         end_timeframe=str(end_timeframe)  # assuming format "2023-02-03"
     )
-
+    
+    start_sat_image_array, start_date_info = load_img_array_from_satellite(
+        lat_deg=float(latitude),
+        lon_deg=float(longitude),
+        end_timeframe=str(start_timeframe)  # assuming format "2023-02-03"
+    )
+    
     #End sat present
     end_sat_image_list = end_sat_image_array.tolist()
 
     #End mask present
     end_mask_image_array = segment(end_sat_image_list, model)
     end_mask_image_list = end_mask_image_array.tolist()
+    
+    #Start sat present
+    start_sat_image_list = start_sat_image_array.tolist()
+
+    #Start mask present
+    start_mask_image_array = segment(start_sat_image_list, model)
+    start_mask_image_list = start_mask_image_array.tolist()
 
 
     return JSONResponse(content={"end_mask_image_list": end_mask_image_list,
                                  "end_sat_image_list": end_sat_image_list,
-                                 'request_info_date':request_info_date,
-                                 "test": end_mask_image_list
+                                 "start_mask_image_list": start_mask_image_list,
+                                 "start_sat_image_list": start_sat_image_list,
+                                 'start_date_info':start_date_info,
+                                 'end_date_info': end_date_info,
                                  })
 
 # Selfmade model endpoints
