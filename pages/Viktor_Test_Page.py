@@ -75,7 +75,6 @@ with inputcol2:
         end_mask_image_list = response.json().get("end_mask_image_list")
         end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
         st.session_state.end_mask = end_mask_image_array
-        st.image(end_mask_image_array)
 
         # if end_mask:
         #         st.image(end_mask, caption= 'End mask')                
