@@ -4,6 +4,7 @@ from PIL import Image
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from model.segmenter import segment
+#from model.segmenter_selfmade import segment
 from model.image_array_loaders import load_img_array_from_satellite, load_img_array_locally
 
 # INSTRUCTION:

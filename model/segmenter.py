@@ -26,3 +26,20 @@ def segment(img_array: np.array, model) -> np.array:
     # cropped_img.save(output_path)
     cropped_img_array = np.array(cropped_img, dtype=np.uint8)
     return cropped_img_array
+
+
+def segment(img_array: np.array, model) -> np.array:
+    """Takes a scaled image array, predicts its rainforest segmentation, converts it
+    to black and white and crops the images white padding. Returns a numpy
+    array representing the image.
+    """
+    # adding batch size dimension
+    prediction = model.predict(np.expand_dims(img_array, axis=0))
+    prediction = prediction.reshape((512,512,1))
+
+    # converting predicted image to black and white
+    threshold = 0.62
+    prediction_array = (prediction > threshold).astype(np.uint8) * 255
+    prediction_array = prediction_array.astype(np.uint8)
+
+    return prediction_array
