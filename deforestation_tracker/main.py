@@ -41,20 +41,50 @@ def get_image_from_satellite_with_params(
                                  "segmented_image_list": image_list,
                                  "request_info_date": request_info_date})
 
+@api_app.get("/do_everything")
+def do_everything(
+    start_timeframe: str,  # TODO: Pay attention to unused inputs.
+    end_timeframe: str,
+    longitude: str,
+    latitude: str,
+    sample_number: str,  # TODO: Pay attention to unused inputs.
+    square_size: str):  # TODO: Pay attention to unused inputs.
 
-# SELFMADE MODEL ENDPOINTS
+    model = load_model('./deforestation_tracker/model_ressources/unet-attention-3d.hdf5')
 
-# @api_app.get("/get_image_from_satellite_self")
-# def get_image_from_satellite_self():
-#     model = load_model('./deforestation_tracker/model_ressources/att_unet4d_selfmade.hdf5')
-#     image_array = load_img_array_from_satellite(request_type='4-band')
-#     # Scale image array to have the same scale as training images that have been
-#     # preprocessed with rasterio
-#     max_values = np.max(image_array, axis=(0, 1))
-#     image_array = image_array / max_values
-#     image_array = segment_self(image_array, model)
-#     image_list = image_array.tolist()
-#     return JSONResponse(content={"image_list": image_list})
+    #End sat pull
+    end_sat_image_array = load_img_array_from_satellite(
+        lat_deg=float(latitude),
+        lon_deg=float(longitude),
+        end_timeframe=str(end_timeframe)  # assuming format "2023-02-03"
+    )
+
+    #End sat present
+    end_sat_image_list = end_sat_image_array.tolist()
+
+    #End mask present
+    end_mask_image_array = segment(end_sat_image_list, model)
+    end_mask_image_list = end_mask_image_array.tolist()
+
+
+    return JSONResponse(content={"end_mask_image_list": end_mask_image_list,
+                                 "end_sat_image_list": end_sat_image_list,
+                                 "test": end_mask_image_list
+                                 })
+
+# Selfmade model endpoints
+
+@api_app.get("/get_image_from_satellite_self")
+def get_image_from_satellite():
+    model = load_model('./deforestation_tracker/model_ressources/att_unet4d_selfmade.hdf5')
+    image_array = load_img_array_from_satellite(request_type='4-band')
+    # Scale image array to have the same scale as training images that have been
+    # preprocessed with rasterio
+    max_values = np.max(image_array, axis=(0, 1))
+    image_array = image_array / max_values
+    image_array = segment_self(image_array, model)
+    image_list = image_array.tolist()
+    return JSONResponse(content={"image_list": image_list})
 
 @api_app.get("/get_image_from_satellite_with_params_self")
 def get_image_from_satellite_with_params_self(
