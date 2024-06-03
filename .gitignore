@@ -23,3 +23,6 @@ TestResults.xml
 # Local Notebooks
 davids_frontend_nb.ipynb
 #pycache
+
+# python version
+.python-version
