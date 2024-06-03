@@ -3,7 +3,6 @@ import datetime as dt
 import pydeck as pdk
 from PIL import Image
 import requests
-import random
 import numpy as np
 from processing.frontend_processing import smooth_and_vectorize, overlay_vector_on_mask
 from io import BytesIO
@@ -20,7 +19,7 @@ if 'forest_loss' not in st.session_state:
     st.session_state.end_forest_cover_percent = 0.0
     st.session_state.end_sat = placeholder_image
     st.session_state.end_overlay = placeholder_image
-    st.session_state.end_forest_cover_percent_int = 0
+    st.session_state.end_forest_cover_percent_int = 20
 
 st.set_page_config(
     page_title="Deforestation Tracker",
@@ -31,6 +30,7 @@ st.set_page_config(
 
 st.markdown("## Deforestation Tracker")
 st.markdown("Track forest area change of a desired location by entering coordinates and a timeframe below.")
+
 
 # Create columns for layout
 input_col1, inputcol2, map_col, output_col = st.columns([1, 1, 6, 3])
@@ -66,14 +66,31 @@ with inputcol2:
     }
     st.markdown('-----')
     st.markdown('###')
+    
+    test_api = "http://localhost:8000/test"
+    if st.button("Test"):        
+            response = requests.get(url=test_api)
+            test = response.json().get("test")
+            st.markdown(test)
+    
+    
+    param_api_url = "http://localhost:8080/get_image_from_satellite_with_params"
+    if st.button("Test Input Sensitive API"):
+        response = requests.get(url=param_api_url, params=params, timeout=60)
 
-    everything_api = "http://localhost:8000/do_everything"
+        segmented_image_list = response.json().get("segmented_image_list")
+        image_array = np.array(segmented_image_list, dtype=np.uint8)
+        st.image(image_array, caption="Segmented Image")
+        
+    
+    everything_api = "http://localhost:8080/do_everything"
     if st.button("Do Everything"):        
         response = requests.get(url=everything_api, params=params, timeout=10)
         
         #End Mask
         end_mask_image_list = response.json().get("end_mask_image_list")
         end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
+        st.markdown(end_mask_image_array)
         st.session_state.end_mask = end_mask_image_array
 
         # if end_mask:
@@ -84,6 +101,13 @@ with inputcol2:
         end_sat_image_array = np.array(end_sat_image_list, dtype=np.uint8)
         end_sat =  Image.fromarray(end_sat_image_array)
         st.session_state.end_sat = end_sat
+        
+        
+        original_image_array = np.array(end_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+        st.image(original_image_array)
+        
+        # #rREPONSE WITH INFORMATION
+
 
         #End vector
         end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#FF0000', 0.4)
@@ -100,23 +124,6 @@ with inputcol2:
         
         end_forest_cover_ha = (end_forest_cover_percent/100)*26,214,400
     
-    # if st.button('Calculate Change') and all(params.values()):
-    #     response = requests.get(url=API_URL, params=params, timeout=5)
-    #     prediction_json = response.json()
-    #     prediction = round(prediction_json["change"], 2)
-    #     prediction_string = format(prediction, '.2f')
-        
-    #     # st.markdown(f"""
-    #     #             In the specified plot of land,
-    #     #             the rainforest area was reduced by {prediction_string} %
-    #     #             between {start_timeframe} and {end_timeframe}.
-    #     #             """)
-    
-    #     st.session_state.forest_loss_start = round(random.uniform(3.1, 6), 2)
-    #     st.session_state.forest_loss_end = round(st.session_state.forest_loss_start - round(random.uniform(2, 3), 2))
-    #     st.session_state.test_img = 'image_postproc/smoothed_png.png'
-    
-
 with output_col:
     tab1, tab2, tab3, tab4 = st.tabs(['Forest Loss', 'Sat Images', 'Masks', 'Test'])
     
@@ -165,14 +172,7 @@ with output_col:
             st.markdown('#')
             st.markdown('#')
             st.markdown('End')
-        # with col2:
-        #     fn = '/Users/viktor/code/vikfalk/deforestation/deforestation_frontend/images/after_resized_satellite.tiff'
-        #     image = Image.open(fn)
-        #     st.image(image, width=190)
-            
-            # fn = '/Users/viktor/code/vikfalk/deforestation/deforestation_frontend/images/after_resized_satellite.tiff'
-            # image = Image.open(fn)
-            # st.image(image, width=190)
+
     
     with tab3:
         col1, col2, col3 = st.columns(3)

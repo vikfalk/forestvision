@@ -4,4 +4,4 @@ numpy
 datetime
 pillow
 requests
-random
+opencv-python
