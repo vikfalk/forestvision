@@ -9,7 +9,7 @@ from deforestation_tracker.image_array_loaders import load_img_array_from_satell
 
 # INSTRUCTION:
 # Run this file, triggering the __main__ function.
-# Go to "http://localhost:8000/docs" to test it out.
+# Go to "http://localhost:8080/docs" to test it out.
 
 api_app = FastAPI()
 
