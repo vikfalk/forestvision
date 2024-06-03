@@ -15,9 +15,9 @@ st.set_page_config(
     page_icon="🌳",
 )
 
-st.sidebar.markdown("""
-    # Sidebar Placeholder
-    """)
+# st.sidebar.markdown("""
+#     # Sidebar Placeholder
+#     """)
 
 st.markdown('''
 # Deforestation Tracker
@@ -31,54 +31,11 @@ square_size_options = [5.12 * factor for factor in factors]
 square_size = col3.selectbox('Side Length of the Square in km', square_size_options)
 
 col3, col4, col5 = st.columns(3)
-start_timeframe = col3.date_input('Start of Timeframe', dt.datetime(2021, 1, 1))
-end_timeframe = col4.date_input('End of Timeframe')
+start_timeframe = col3.date_input('Start of Timeframe', dt.datetime(2020, 6, 15))
+end_timeframe = col4.date_input('End of Timeframe', dt.datetime(2024, 5, 30))
 sample_number = col5.number_input('Number of Samples', 1)
 
-#  Map Stuff
-view_state = pdk.ViewState(
-    longitude=longitude_input,
-    latitude=latitude_input,
-    zoom=3.5
-)
-
-data = [
-    {"position": [longitude_input, latitude_input], "name": "Location of Interest"},
-]
-
-half_side_length = float(square_size) / 2 / 110.574
-
-square_coords = [
-    [longitude_input - half_side_length, latitude_input - half_side_length],
-    [longitude_input + half_side_length, latitude_input - half_side_length],
-    [longitude_input + half_side_length, latitude_input + half_side_length],
-    [longitude_input - half_side_length, latitude_input + half_side_length],
-    [longitude_input - half_side_length, latitude_input - half_side_length]
-]
-
-polygon_data = [{
-    "polygon": square_coords,
-    "name": "Deforestation Area"
-}]
-
-polygon_layer = pdk.Layer(
-    'PolygonLayer',
-    data=polygon_data,
-    get_polygon='polygon',
-    get_fill_color='[230, 184, 109, 140]',
-    pickable=True,
-    extruded=False
-)
-
-st.pydeck_chart(pdk.Deck(
-        map_style='mapbox://styles/mapbox/satellite-v9',
-        initial_view_state=view_state,
-        layers=[polygon_layer], #  point_layer,
-        tooltip={"text": "{name}"}
-    ))
-
-# API Stuff
-st.title("Fetch Image from Satellite Using User Inputs")
+# Assembled User Input Parameters
 params = {
         'start_timeframe': start_timeframe,
         'end_timeframe': end_timeframe,
@@ -87,48 +44,77 @@ params = {
         'sample_number': sample_number,
         'square_size' : square_size
 }
-param_api = "http://localhost:8000/get_image_from_satellite_with_params"
-if st.button("Test Input Sensitive API"):
-    response = requests.get(url=param_api, params=params, timeout=10)
-    image_list = response.json().get("image_list")
-    image_array = np.array(image_list, dtype=np.uint8)
-    image =  Image.fromarray(image_array)
-    if image:
-            st.image(image, caption="Fetched Image")
 
-st.markdown("""
-    # Testing Section
-    ## User Input Parameters
-    Here are the parameters that are going to get fed to our model API… NOT.
+#  Map Stuff
+# view_state = pdk.ViewState(
+#     longitude=longitude_input,
+#     latitude=latitude_input,
+#     zoom=3.5
+# )
 
-    Actually the date format will come out as as a string with the particular
-    format "YYYY-MM-DD".
-""")
-st.write(params)
+# data = [
+#     {"position": [longitude_input, latitude_input], "name": "Location of Interest"},
+# ]
 
-st.markdown("""
-    ## Image Fetcher From API Without User Inputs
-""")
-api_options = [
-    "http://localhost:8000/get_image",
-    "http://localhost:8000/get_complex_image",
-    "http://localhost:8000/get_image_from_model",
-    "http://localhost:8000/get_image_from_satellite"
+# half_side_length = float(square_size) / 2 / 110.574
+
+# square_coords = [
+#     [longitude_input - half_side_length, latitude_input - half_side_length],
+#     [longitude_input + half_side_length, latitude_input - half_side_length],
+#     [longitude_input + half_side_length, latitude_input + half_side_length],
+#     [longitude_input - half_side_length, latitude_input + half_side_length],
+#     [longitude_input - half_side_length, latitude_input - half_side_length]
+# ]
+
+# polygon_data = [{
+#     "polygon": square_coords,
+#     "name": "Deforestation Area"
+# }]
+
+# polygon_layer = pdk.Layer(
+#     'PolygonLayer',
+#     data=polygon_data,
+#     get_polygon='polygon',
+#     get_fill_color='[230, 184, 109, 140]',
+#     pickable=True,
+#     extruded=False
+# )
+
+# st.pydeck_chart(pdk.Deck(
+#         map_style='mapbox://styles/mapbox/satellite-v9',
+#         initial_view_state=view_state,
+#         layers=[polygon_layer], #  point_layer,
+#         tooltip={"text": "{name}"}
+#     ))
+
+# API Stuff
+st.title("Fetch Image from Satellite Using User Inputs")
+
+cloud_base_url = "https://deforestation-tracker-llzimbumzq-oe.a.run.app"
+local_base_url = "http://localhost:8080"
+param_api_options = [
+    f"{local_base_url}/get_image_from_satellite_with_params",
+    f"{cloud_base_url}/get_image_from_satellite_with_params",
 ]
-api_url = st.selectbox('API Selection', api_options)
+param_api_url = st.selectbox('API Selection', param_api_options)
 
-if st.button("Test API"):
-    response = requests.get(api_url, timeout=10)
-    image_list = response.json().get("image_list")
-    image_array = np.array(image_list, dtype=np.uint8)
-    image =  Image.fromarray(image_array)
-    if image:
-            st.image(image, caption="Fetched Image")
+if st.button("Test Input Sensitive API"):
+    response = requests.get(url=param_api_url, params=params, timeout=60)
 
-# Image Depiction Stuff
-st.markdown("""
-    ## Image Segmentation Example (File Saved Locally in Frontend Repo)
-""")
-col1, col2 = st.columns(2)
-col1.image("./images/before_resized.png", caption="Before")
-col2.image("./images/after_resized.png", caption="After")
+    segmented_image_list = response.json().get("segmented_image_list")
+    image_array = np.array(segmented_image_list, dtype=np.uint8)
+
+    original_image_array_list = response.json().get("original_image_list")
+    original_image_array = np.array(original_image_array_list, dtype=np.float32).reshape((512, 512, 3))
+
+    st.image(image_array, caption="Segmented Image")
+    st.image(original_image_array, caption="Original Image")
+
+# st.markdown("""
+#     ## User Input Parameters
+#     Here are the parameters that are going to get fed to our model API… NOT.
+
+#     Actually the date format will come out as as a string with the particular
+#     format "YYYY-MM-DD".
+# """)
+# st.write(params)
