@@ -40,5 +40,5 @@ def load_img_array_locally(image_name_without_ending="after_resized"):
     return img_array
 
 
-img_array = load_img_array_from_satellite()
-print(img_array.shape)
+# img_array = load_img_array_from_satellite()
+# print(img_array.shape)
