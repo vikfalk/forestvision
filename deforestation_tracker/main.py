@@ -1,4 +1,5 @@
 import os
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 import numpy as np
 from PIL import Image
@@ -6,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from deforestation_tracker.segmenter import segment, segment_self
 from deforestation_tracker.image_array_loaders import load_img_array_from_satellite, load_img_array_locally
+from deforestation_tracker.custom_layer import RepeatElements
 
 # INSTRUCTION:
 # Run this file, triggering the __main__ function.
@@ -59,7 +61,7 @@ def get_image_from_satellite_with_params(
     image_array, request_info_date = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
-        end_timeframe=str(end_timeframe)  # assuming format "2023-02-03"
+        end_timeframe=str(end_timeframe),  # assuming format "2023-02-03"
     )
     image_array = segment(image_array, model)
     image_list = image_array.tolist()
@@ -90,9 +92,10 @@ def generic_param_api(
 # Selfmade model endpoints
 
 @api_app.get("/get_image_from_satellite_self")
-def get_image_from_satellite():
-    model = load_model('./deforestation_tracker/model_ressources/att_unet4d_selfmade.hdf5')
+def get_image_from_satellite_self():
+    model = load_model('./deforestation_tracker/model_ressources/att_unet_4b.hdf5', custom_objects={'RepeatElements': RepeatElements})
     image_array = load_img_array_from_satellite(request_type='4-band')
+    image_array = image_array[0]
     # Scale image array to have the same scale as training images that have been
     # preprocessed with rasterio
     max_values = np.max(image_array, axis=(0, 1))
@@ -110,13 +113,14 @@ def get_image_from_satellite_with_params(
     sample_number: str,  # TODO: Pay attention to unused inputs.
     square_size: str):  # TODO: Pay attention to unused inputs.
     image_list = float(latitude), float(longitude), end_timeframe
-    model = load_model('./deforestation_tracker/model_ressources/att_unet4d_selfmade.hdf5')
+    model = load_model('./deforestation_tracker/model_ressources/att_unet_4b.hdf5', custom_objects={'RepeatElements': RepeatElements})
     image_array = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
         end_timeframe=str(end_timeframe),  # assuming format "2023-02-03"
         request_type='4-band'
     )
+    image_array = image_array[0]
     # Scale image array to have the same scale as training images that have been
     # preprocessed with rasterio
     max_values = np.max(image_array, axis=(0, 1))
