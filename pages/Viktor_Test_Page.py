@@ -20,6 +20,12 @@ if 'forest_loss' not in st.session_state:
     st.session_state.end_sat = placeholder_image
     st.session_state.end_overlay = placeholder_image
     st.session_state.end_forest_cover_percent_int = 20
+    st.session_state.start_vector_overlay = None
+    st.session_state.start_mask = placeholder_image
+    st.session_state.start_forest_cover_percent = 0.0
+    st.session_state.start_sat = placeholder_image
+    st.session_state.start_overlay = placeholder_image
+    st.session_state.start_forest_cover_percent_int = 20
 
 st.set_page_config(
     page_title="Deforestation Tracker",
@@ -30,7 +36,6 @@ st.set_page_config(
 
 st.markdown("## Deforestation Tracker")
 st.markdown("Track forest area change of a desired location by entering coordinates and a timeframe below.")
-
 
 # Create columns for layout
 input_col1, inputcol2, map_col, output_col = st.columns([1, 1, 6, 3])
@@ -69,40 +74,73 @@ with inputcol2:
     
     everything_api = "http://localhost:8080/do_everything"
     if st.button("Do Everything"):        
-        response = requests.get(url=everything_api, params=params, timeout=10)
+        response = requests.get(url=everything_api, params=params, timeout=60)
+        
+        #start Mask
+        start_mask_image_list = response.json().get("start_mask_image_list")
+        start_mask_image_array = np.array(start_mask_image_list, dtype=np.uint8)
+        start_mask_image = Image.fromarray(start_mask_image_array)
+        st.session_state.start_mask = start_mask_image_array
+        
+        #start Sat
+        start_sat_image_list = response.json().get("start_sat_image_list")
+        start_sat_image_array = np.array(start_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+        start_sat_image = Image.fromarray((start_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
+        st.session_state.start_sat = start_sat_image_array
+       
+        # #rREPONSE WITH INFORMATION
+
+        #start vector
+        start_mask_vector = smooth_and_vectorize(start_mask_image_array, 9, '#FF0000', 0.4)
+        start_mask_vector = start_mask_vector.convert('RGBA')
+        st.session_state.start_vector_overlay = start_mask_vector
+        
+        #start overlay
+        start_mask_image_rgba = start_mask_image.convert('RGBA')
+        start_overlay = Image.alpha_composite(start_sat_image, start_mask_vector)
+        st.session_state.start_overlay = start_overlay
+        
+
+        # start metrics
+        start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array == 0) / start_mask_image_array.size) * 100), 1)
+        st.session_state.start_forest_cover_percent = start_forest_cover_percent
+        st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
+        
+        start_forest_cover_ha = (start_forest_cover_percent/100)*26,214,400
+    
         
         #End Mask
         end_mask_image_list = response.json().get("end_mask_image_list")
         end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
+        end_mask_image = Image.fromarray(end_mask_image_array)
         st.session_state.end_mask = end_mask_image_array
         
         #End Sat
         end_sat_image_list = response.json().get("end_sat_image_list")
-        end_sat_image_array = np.array(end_sat_image_list, dtype=np.uint8)
-        end_sat =  Image.fromarray(end_sat_image_array)
-        st.session_state.end_sat = end_sat
-        
-        
         end_sat_image_array = np.array(end_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+        end_sat_image = Image.fromarray((end_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
         st.session_state.end_sat = end_sat_image_array
-        
+       
         # #rREPONSE WITH INFORMATION
-
 
         #End vector
         end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#FF0000', 0.4)
+        end_mask_vector = end_mask_vector.convert('RGBA')
         st.session_state.end_vector_overlay = end_mask_vector
-            
+        
         #End overlay
-        end_overlay = overlay_vector_on_mask(end_mask_vector, end_sat_image_array)
+        end_mask_image_rgba = end_mask_image.convert('RGBA')
+        end_overlay = Image.alpha_composite(end_sat_image, end_mask_vector)
         st.session_state.end_overlay = end_overlay
         
+
         # End metrics
         end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array == 0) / end_mask_image_array.size) * 100), 1)
         st.session_state.end_forest_cover_percent = end_forest_cover_percent
         st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
         
         end_forest_cover_ha = (end_forest_cover_percent/100)*26,214,400
+        
     
 with output_col:
     tab1, tab2, tab3, tab4 = st.tabs(['Forest Loss', 'Sat Images', 'Masks', 'Test'])
@@ -111,25 +149,20 @@ with output_col:
         st.markdown('Start date forest area')
         
         WIDTH_FACTOR = 50
-        box_width_start = st.session_state.forest_loss_start * WIDTH_FACTOR
-        st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #FF4B4B; border-radius: 10px; width: {box_width_start}px; height: 50px; padding: 5px">'
-                    f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0;">{st.session_state.forest_loss_start}</p>'
-                    '</div>', unsafe_allow_html=True)
 
+        # box_width_start = 250  # Remove this line, as we will now calculate the width dynamically
+        # Add the following line to set the width to 80% of the "Total deforestation" box's width
+        # Use inline styling to set the width dynamically
         
-        # st.markdown('<div style="display: flex; justify-content: left; align-items: center; background-color: #FF4B4B; border-radius: 10px; width: 350px; height: 50px; padding: 5px">'
-        #         '<p style="color: white; font-size: 24px; font-weight: bold; margin: 0;">5.4 ha</p>'
-        #         '</div>', unsafe_allow_html=True)
+        
+        st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #FF4B4B; border-radius: 10px; width: {st.session_state.start_forest_cover_percent_int}%; height: 50px; padding: 5px">'
+                    f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.start_forest_cover_percent}%</p>'
+                    '</div>', unsafe_allow_html=True)
         
         st.markdown("###")
         
         st.markdown('End date forest area')
 
-        box_width_end = st.session_state.forest_loss_end * WIDTH_FACTOR
-        # box_width_end = 250  # Remove this line, as we will now calculate the width dynamically
-        # Add the following line to set the width to 80% of the "Total deforestation" box's width
-        # Use inline styling to set the width dynamically
-        
         
         st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #FF4B4B; border-radius: 10px; width: {st.session_state.end_forest_cover_percent_int}%; height: 50px; padding: 5px">'
                     f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.end_forest_cover_percent}%</p>'
@@ -270,7 +303,7 @@ sat_col, forest_col, overlay_col, metrics_col = st.columns([1, 1, 3, 2])
 with sat_col:
     st.markdown("##### Start date")
     st.markdown("Satellite image")
-    st.image(st.session_state.end_sat)
+    st.image(st.session_state.start_sat)
         
     st.markdown("##### End date")
     st.markdown("Satellite image")
@@ -279,7 +312,7 @@ with sat_col:
 with forest_col:
     st.markdown('<p style="color: #0F1116; ">filler</p>', unsafe_allow_html=True)
     st.markdown("Forest area")
-    st.image(st.session_state.end_overlay)
+    st.image(st.session_state.start_overlay)
     
     st.markdown('<p style="color: #0F1116; ">filler</p>', unsafe_allow_html=True)
     st.markdown("Forest area")
