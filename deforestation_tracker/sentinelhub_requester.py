@@ -166,27 +166,90 @@ def request_image(box, image_size_px, resolution_m_per_px, time_interval, config
     elif request_type == '4-band':
         return img
 
+def sentinel_build_request(config, box, request_type, request_date, image_size_px=512):
+    evalscript_true_color = """
+    //VERSION=3
+
+    function setup() {
+    return {
+        input: ["B02", "B03", "B04"],
+        output: {
+            bands: 3,
+            sampleType: "FLOAT32"
+        }
+    };
+    }
+
+    function evaluatePixel(sample) {
+    return [2.5 * sample.B04, 2.5 * sample.B03, 2.5 * sample.B02];
+    }
+    """
+    evalscript_four_bands = """
+        //VERSION=3
+        function setup() {
+            return {
+                input: [{
+                    bands: ["B02","B03","B04","B08"],
+                    units: "DN"
+                }],
+                output: {
+                    bands: 4,
+                    sampleType: "FLOAT32"
+                }
+            };
+        }
+
+        function evaluatePixel(sample) {
+            return [sample.B02,
+                    sample.B03,
+                    sample.B04,
+                    sample.B08,
+                    ];
+        }
+    """
+    if request_type == 'TrueColor':
+        evalscript = evalscript_true_color
+    elif request_type == '4-band':
+        evalscript = evalscript_four_bands
+    request = SentinelHubRequest(
+        data_folder="sentinel_imgs",
+        evalscript=evalscript,
+        input_data=[
+            SentinelHubRequest.input_data(
+                data_collection=DataCollection.SENTINEL2_L2A,
+                time_interval=request_date,
+                other_args={"dataFilter": {"maxCloudCoverage": 50, "mosaickingOrder": "leastCC"}}
+            ),
+        ],
+        responses=[
+            SentinelHubRequest.output_response('default', MimeType.TIFF),
+        ],
+        bbox=box,
+        size=[image_size_px, image_size_px],
+        config=config
+    )
+    return request
+
 
 if __name__ == '__main__':
-
     # Defining request parameters
-    lat_deg = -8.48638
-    lon_deg = -55.26209
-    time_interval = ('2024-04-28', '2024-05-28')
-    date_requested = '2020-05-10'
+    # lat_deg = -8.48638
+    # lon_deg = -55.26209
+    # time_interval = ('2024-04-28', '2024-05-28')
+    # date_requested = '2020-05-10'
 
-    config, catalog = sentinelhub_authorization()
+    # config, catalog = sentinelhub_authorization()
 
-    box = box_from_point(lat_deg=lat_deg, lon_deg=lon_deg, image_size_px=512, resolution_m_per_px=10)
-    optimal_tile = search_available_L2A_tiles(catalog=catalog, bbox=box, date_request=date_requested, range_days=92, maxCloudCoverage=10)
-    if optimal_tile:
-        optimal_date = optimal_tile.get('date')
-        print(request_image(
-                            box=box,
-                            image_size_px=512,
-                            resolution_m_per_px=10,
-                            config=config,
-                            time_interval=(optimal_date, optimal_date),
-                            request_type='TrueColor'
-                            ).flatten().mean()
-            )
+    # box = box_from_point(lat_deg=lat_deg, lon_deg=lon_deg, image_size_px=512, resolution_m_per_px=10)
+    # optimal_tile = search_available_L2A_tiles(catalog=catalog, bbox=box, date_request=date_requested, range_days=92, maxCloudCoverage=10)
+    # if optimal_tile:
+    #     optimal_date = optimal_tile.get('date')
+    #     print(request_image(
+    #                         box=box,
+    #                         image_size_px=512,
+    #                         resolution_m_per_px=10,
+    #                         config=config,
+    #                         time_interval=(optimal_date, optimal_date),
+    #                         request_type='TrueColor'
+    #                         ).flatten().mean()
+    #         )
