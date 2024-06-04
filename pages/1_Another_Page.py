@@ -216,7 +216,7 @@ with output_col:
 view_state = pdk.ViewState(
     longitude=longitude_input,
     latitude=latitude_input,
-    zoom=12.5
+    zoom=square_size
 )
 
 half_side_length = float(square_size) / 2 / 110.574
