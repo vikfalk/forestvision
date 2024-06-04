@@ -1,7 +1,8 @@
-streamlit
+streamlit==1.35.0
 pydeck
 numpy
 datetime
 pillow
 requests
 opencv-python
+streamlit_image_select

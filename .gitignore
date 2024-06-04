@@ -2,8 +2,9 @@
 #Template for AL projects for Dynamics 365 Business Central
 #launch.json folder
 .vscode/
-#Cache folder
+#Cache Files and Folders
 .alcache/
+__pycache__/
 #Symbols folder
 .alpackages/
 #Snapshots folder
@@ -22,4 +23,5 @@ rad.json
 TestResults.xml
 # Local Notebooks
 davids_frontend_nb.ipynb
-#pycache
+# python version
+.python-version
