@@ -2,11 +2,12 @@ import os
 from tensorflow.keras.models import load_model
 import os
 import numpy as np
+import datetime as dt
 from PIL import Image
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from deforestation_tracker.segmenter import segment, segment_self
-from deforestation_tracker.image_array_loaders import load_img_array_from_satellite, load_img_array_locally
+from deforestation_tracker.image_array_loaders import load_img_array_from_satellite, load_img_array_locally, load_multiple_imgs_from_sat
 from deforestation_tracker.custom_layer import RepeatElements
 
 # INSTRUCTION:
@@ -142,6 +143,22 @@ def get_image_from_satellite_with_params_self(
                                 "segmented_image_list": image_list,
                                 "request_info_date": request_info_date})
 
+@app.get("/get_multiple_images_from_satellite")
+def get_multiple_images_from_satellite(
+    start_timeframe: str,  # TODO: Pay attention to unused inputs.
+    end_timeframe: str,
+    longitude: str,
+    latitude: str,
+    sample_number: str):  # TODO: Pay attention to unused inputs.
+    # construct list with request dates
+    start_dt, end_dt = dt.datetime.strptime(start_timeframe, "%Y-%m-%d"), dt.datetime.strptime(end_timeframe, "%Y-%m-%d")
+    date_step_size = (end_dt - start_dt)/(sample_number - 1)
+    date_list = [dt.date.strftime(start_dt + i * date_step_size, "%Y-%m-%d") for i in range(sample_number)]
+    date_list_loaded, img_list = load_multiple_imgs_from_sat(lat_deg=latitude, lon_deg=longitude, date_list=date_list, request_type='TrueColor')
+    test_img = img_list[0]
+    test_img_list = image_array.flatten().tolist()
+    return JSONResponse(content={"test_img_list": test_img_list
+                                })
 
 if __name__ == "__main__":
     import uvicorn
