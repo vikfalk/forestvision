@@ -5,3 +5,4 @@ datetime
 pillow
 requests
 opencv-python
+streamlit_image_select
