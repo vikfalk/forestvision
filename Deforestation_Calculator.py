@@ -47,7 +47,7 @@ if 'forest_loss' not in st.session_state:
 st.set_page_config(
     page_title="AI-Driven Deforestation Tracker",
     page_icon="🌳",
-    layout="wide", 
+    layout="wide",
     initial_sidebar_state="collapsed"
 )
 
@@ -441,14 +441,27 @@ polygon_layer = pdk.Layer(
 )
 
 BOUNDS = square_coords
-# Create a BitmapLayer to overlay the PNG image on the map
-bitmap_layer = pdk.Layer(
-    "BitmapLayer", 
-    data=None, 
-    image=st.session_state.total_calculated_overlay_map, 
-    bounds=BOUNDS, 
-    opacity=0.5  # Adjust opacity as needed
-)
+
+# Retrieve the vectorized mask image from the session state
+end_mask_vector = st.session_state.end_vector_overlay
+
+# # Convert the vectorized mask image to PNG format
+# if end_mask_vector:
+#     buffer = BytesIO()
+#     end_mask_vector.save(buffer, format="PNG")
+#     st.session_state.end_mask_png = buffer.getvalue()
+
+
+# # Create a BitmapLayer to overlay the PNG image on the map
+# bitmap_layer = pdk.Layer(
+#     "BitmapLayer",
+#     data=None,
+#     image=st.session_state.end_mask_png,
+#     bounds=BOUNDS,
+#     opacity=0.5  # Adjust opacity as needed
+# )
+
+# Place the BitmapLayer in the list of layers when creating the pydeck Deck object
 with map_col:
     st.pydeck_chart(pdk.Deck(
         map_style='mapbox://styles/mapbox/satellite-v9',
@@ -465,17 +478,17 @@ with st.expander(label='Output', expanded=st.session_state.expander_open):
     with sat_col:
         st.markdown("##### Start date")
         st.image(st.session_state.start_sat, caption= "Satellite Image")
-            
+
         st.markdown("##### End date")
         st.image(st.session_state.end_sat, caption= "Satellite Image")
-        
+
     with forest_col:
         st.markdown('<p style="color: #0F1116; ">filler</p>', unsafe_allow_html=True)
         st.image(st.session_state.start_overlay, caption= "Forest Area")
-        
+
         st.markdown('<p style="color: #0F1116; ">filler</p>', unsafe_allow_html=True)
         st.image(st.session_state.end_overlay, caption= "Forest Area")
-    
+
     with overlay_col:
         st.markdown('#### Total Forest Change')
         st.image(st.session_state.total_calculated_overlay)
@@ -491,9 +504,9 @@ with st.expander(label='Output', expanded=st.session_state.expander_open):
                         f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.start_forest_cover_percent:.1f}%</p>'
                         '</div>', unsafe_allow_html=True)
             st.markdown(' ')
-            
+
             st.markdown('##### End date forest area')
-            
+
             st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #FF4B4B; border-radius: 10px; width: {st.session_state.end_forest_cover_percent_int}%; height: 50px; padding: 5px">'
                         f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.end_forest_cover_percent:.1f}%</p>'
                         '</div>', unsafe_allow_html=True)
@@ -502,7 +515,7 @@ with st.expander(label='Output', expanded=st.session_state.expander_open):
             st.markdown(
                     '<h3 style="color: white; font-size: 24px;">Total deforestation change</h3>'
                     '</div>', unsafe_allow_html=True)
-            
+
             st.markdown('<div style="display: flex; justify-content: center; align-items: center; background-color: #262630; border-radius: 10px; height: 100px; padding: 5px"; border>'
                     f'<p style="color: white; font-size: 50px; font-weight: bold; margin: 0;">- {st.session_state.total_deforestation}%</p>'
                     '</div>', unsafe_allow_html=True)
@@ -512,9 +525,9 @@ with st.expander(label='Output', expanded=st.session_state.expander_open):
                         f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.start_forest_cover_ha:.0f}</p>'
                         '</div>', unsafe_allow_html=True)
             st.markdown(' ')
-            
+
             st.markdown('##### End date forest area (thousand hectares)')
-            
+
             st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #FF4B4B; border-radius: 10px; width: {st.session_state.end_forest_cover_percent_int}%; height: 50px; padding: 5px">'
                         f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.end_forest_cover_ha:.0f}</p>'
                         '</div>', unsafe_allow_html=True)
@@ -523,7 +536,7 @@ with st.expander(label='Output', expanded=st.session_state.expander_open):
             st.markdown(
                     '<h3 style="color: white; font-size: 24px;">Total deforestation</h3>'
                     '</div>', unsafe_allow_html=True)
-            
+
             st.markdown('<div style="display: flex; justify-content: center; align-items: center; background-color: #262630; border-radius: 10px; height: 100px; padding: 5px"; border>'
                     f'<p style="color: white; font-size: 50px; font-weight: bold; margin: 0;">-{st.session_state.total_deforestation:.0f}k hectares</p>'
                     '</div>', unsafe_allow_html=True)
@@ -532,7 +545,7 @@ with st.expander(label='Output', expanded=st.session_state.expander_open):
     # with overlay_col:
     #     st.markdown("#### Change in forest area")
     #     st.image('pages/final_overlay_image.png')
-        
+
     #     st.download_button('Download image', IMG_URL)
 
     # with metrics_col:
@@ -544,13 +557,13 @@ with st.expander(label='Output', expanded=st.session_state.expander_open):
     #         st.markdown('<div style="display: flex; justify-content: left; align-items: center; background-color: green; border-radius: 10px; width: 350px; height: 70px; padding: 5px">'
     #                 '<p style="color: white; font-size: 36px; font-weight: bold; margin: 0;">5.12 ha</p>'
     #                 '</div>', unsafe_allow_html=True)
-            
+
     #         st.markdown("###")
-            
+
     #         st.markdown(
     #                 '<p style="color: white; font-size: 18px;">End data forest area</p>'
     #                 '</div>', unsafe_allow_html=True)
-            
+
     #         st.markdown('<div style="display: flex; justify-content: left; align-items: center; background-color: orange; border-radius: 10px; width: 150px; height: 70px; padding: 5px">'
     #                 '<p style="color: white; font-size: 36px; font-weight: bold; margin: 0;">2.11 ha</p>'
     #                 '</div>', unsafe_allow_html=True)
@@ -560,7 +573,7 @@ with st.expander(label='Output', expanded=st.session_state.expander_open):
     #         st.markdown(
     #                 '<h3 style="color: white; font-size: 24px;">Total deforestation</h3>'
     #                 '</div>', unsafe_allow_html=True)
-            
+
     #         st.markdown('<div style="display: flex; justify-content: center; align-items: center; background-color: red; border-radius: 10px; height: 100px; padding: 5px">'
     #                 '<p style="color: white; font-size: 61px; font-weight: bold; margin: 0;">3.01 ha</p>'
     #                 '</div>', unsafe_allow_html=True)
@@ -581,7 +594,7 @@ with st.expander(label='Output', expanded=st.session_state.expander_open):
     #     )
     #     m.add_basemap(basemap)
     #     m.to_streamlit(height=700)
-        
+
 
 
     # st.pydeck_chart(pdk.Deck(
@@ -611,56 +624,8 @@ with st.expander(label='Output', expanded=st.session_state.expander_open):
 
 
 # api = "http://localhost:8080/"
-# if st.button("Test"):   
+# if st.button("Test"):
 #     with st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
 #         response = requests.get(url=api, timeout=60)
 #         response = response.json().get("api status")
 #         st.markdown(response)
-
-
-
-
-
-        # img = image_select(
-        #     "Choose an example",
-        #     images=[
-        #         "https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png",
-        #         "https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png"
-        #     ],
-        #     captions=["Brazilian Soy Farm", "Brazilian Soy Farm"],
-        #     return_value= 'index', 
-        #     index = 0
-        # )
-    
-        # if img == 0:
-        #     pass
-            
-        # if img == 1:
-        #     pass
-            # st.session_state.longitude_input = -55.26000
-            # st.session_state.latitude_input = -8.49000
-            # st.session_state.zoom = 12.5
-
-            
-        
-        # img = image_select(
-        #     "Choose an example",
-        #     images=[
-        #         "https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png",
-        #         "https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png"
-        #     ],
-        #     captions=["Brazilian Soy Farm", "Brazilian Soy Farm"],
-        #     return_value= 'index', 
-        #     index = 0
-        # )
-    
-        # if img == 0:
-        #     pass
-            
-        # if img == 1:
-        #     pass
-            # st.session_state.longitude_input = -55.26000
-            # st.session_state.latitude_input = -8.49000
-            # st.session_state.zoom = 12.5
-
-# Calculate the map view state and polygon coordinates

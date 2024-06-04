@@ -4,5 +4,7 @@ numpy
 datetime
 pillow
 requests
+opencv-python
+streamlit_image_select
 opencv-python-headless
 streamlit_image_select
