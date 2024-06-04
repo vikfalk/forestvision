@@ -1,5 +1,4 @@
 #Image-Aquisition
-google-cloud-secret-manager
 sentinelhub
 fastapi==0.111.0
 numpy==1.26.4
