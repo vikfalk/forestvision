@@ -1,10 +1,16 @@
-FROM python:3.10.6-buster
+# Use an official Python runtime as a parent image
+FROM python:3.10.6-slim-bullseye
 
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+# Set the working directory in the container
+WORKDIR /app
 
+# Copy and install the requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the application code
 COPY deforestation_tracker deforestation_tracker
-COPY setup.py setup.py
-RUN pip install .
+COPY setup.py .
 
-CMD uvicorn deforestation_tracker.main:api_app --host 0.0.0.0 --port $API_PORT
+# Command to run the API
+CMD uvicorn deforestation_tracker.main:app --host 0.0.0.0 --port $PORT
