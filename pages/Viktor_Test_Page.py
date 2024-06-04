@@ -243,14 +243,14 @@ end_mask_vector = st.session_state.end_vector_overlay
 #     st.session_state.end_mask_png = buffer.getvalue()
 
 
-# # Create a BitmapLayer to overlay the PNG image on the map
-# bitmap_layer = pdk.Layer(
-#     "BitmapLayer", 
-#     data=None, 
-#     image=st.session_state.end_mask_png, 
-#     bounds=BOUNDS, 
-#     opacity=0.5  # Adjust opacity as needed
-# )
+# Create a BitmapLayer to overlay the PNG image on the map
+bitmap_layer = pdk.Layer(
+    "BitmapLayer", 
+    data=None, 
+    image=st.session_state.end_mask_png, 
+    bounds=BOUNDS, 
+    opacity=0.5  # Adjust opacity as needed
+)
 
 # Place the BitmapLayer in the list of layers when creating the pydeck Deck object
 with map_col:

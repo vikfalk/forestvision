@@ -6,6 +6,8 @@ import requests
 import numpy as np
 from processing.frontend_processing import smooth_and_vectorize
 from streamlit_image_select import image_select
+import streamlit_lottie
+
 
 placeholder_image = Image.new("RGB", (512, 512), (15, 17, 22))
 
@@ -30,178 +32,387 @@ if 'forest_loss' not in st.session_state:
     st.session_state.total_deforestation = 0
     st.session_state.start_forest_cover_ha = 0
     st.session_state.end_forest_cover_ha = 0
-
+    st.session_state.total_calculated_overlay = placeholder_image
+    st.session_state.total_calculated_overlay_map = None
+    st.session_state.longitude_input = -55.26000
+    st.session_state.longitude_input = -8.49000
+    st.session_state.end_timeframe = dt.datetime(2024, 1, 1)
+    st.session_state.start_timeframe = dt.datetime(2021, 1, 1)
+    
+    st.session_state.expander_open = False
+    st.session_state.info_intro = ' '
+    st.session_state.start_info = ' '
+    st.session_state.end_info = ' '
 
 st.set_page_config(
-    page_title="Deforestation Tracker",
+    page_title="AI-Driven Deforestation Tracker",
     page_icon="🌳",
     layout="wide", 
     initial_sidebar_state="collapsed"
 )
 
-st.markdown("## Deforestation Tracker :palm_tree:")
-st.markdown("Track forest area change of a desired location by entering coordinates and a timeframe on the left. Or choose some examples on the right. ")
+filler_col, intro_col, animation_col = st.columns([2, 5, 23])
+with animation_col:
+    st.markdown("<h1 style='text-align: left; font-family: FreeMono, monospace;font-size: 50px; color: #FFFFFF;'>AI-Driven Deforestation Tracker</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: left; alphafont-size: 16px; opacity: 0.5; color: #FFFFFF;'>Track forest area change of an area using real-time satellite data by inputting coordinates on the left or choosing an example on the right.</h1>", unsafe_allow_html=True)
+with intro_col:
+        st.lottie("https://lottie.host/9bc48342-5206-4456-8ea4-cce828f5fe15/fQVJJlzp4j.json", height = 180)
 
 input_col1, map_col, example_col = st.columns([4, 19, 4])
 with input_col1:
-    # latitude_input = float(st.text_input('Latitude', '-8.49000',
-    #                                     help= "Enter the longitude coordinates of your desired area of interest. Press enter to view on map."))
-    # longitude_input = float(st.text_input('Longitude', '-55.26000',
-    #                                     help= "Enter the longitude coordinates of your desired area of interest. Press enter to view on map."))
-    
-    latitude_input = float(st.text_input('Latitude', '-8.49000'))
-    longitude_input = float(st.text_input('Longitude', '-55.26000'))
-    
-    start_timeframe = st.date_input('Start date', dt.datetime(2021, 1, 1), 
+    with st.container(border=True, height= 510):
+        # latitude_input = float(st.text_input('Latitude', '-8.49000',
+        #                                     help= "Enter the longitude coordinates of your desired area of interest. Press enter to view on map."))
+        # longitude_input = float(st.text_input('Longitude', '-55.26000',
+        #                                     help= "Enter the longitude coordinates of your desired area of interest. Press enter to view on map."))
+        
+        st.session_state.latitude_input = st.text_input('Latitude', '-8.49000', help = "Enter the longitude coordinates of your desired area of interest. Press enter to view on map.")
+        st.session_state.longitude_input = st.text_input('Longitude', '-55.26000')
+        
+        start_timeframe = st.date_input('Start date', dt.datetime(2021, 1, 1), 
+                                        min_value=dt.datetime(2017, 1, 1),
+                                        max_value= dt.datetime(2024, 12, 31), 
+                                        help= "Select the start and end date of your desired timeframe.")
+        end_timeframe = st.date_input('End date',
                                     min_value=dt.datetime(2017, 1, 1),
                                     max_value= dt.datetime(2024, 12, 31))
-    end_timeframe = st.date_input('End date',
-                                  min_value=dt.datetime(2017, 1, 1),
-                                  max_value= dt.datetime(2024, 12, 31))
-    
-    factors = [1, 2, 3, 4, 5, 10, 25, 50, 100]
-    square_size_options = [5.12 * factor for factor in factors]
-    labels = {val: f"{val:.2f}" for val in square_size_options}
-    default_value = square_size_options[0]
-    square_size = 5.12
-    # square_size = st.select_slider('Square length (km)', 
-    #                              options=square_size_options, 
-    #                              value=default_value, 
-    #                              format_func=lambda x: labels[x])
-
-    #     #sample_number = st.slider('Number of samples', min_value=1, max_value=10)
-    sample_number = 1
-    
-    params= {
-        'start_timeframe': start_timeframe,
-        'end_timeframe': end_timeframe,
-        'longitude': longitude_input,
-        'latitude': latitude_input,
-        'sample_number': sample_number,
-        'square_size': square_size
-    }
-
-    everything_api = "http://localhost:8080/do_everything_self"
-    if st.button("✨ Click for magic ✨"):   
-        with st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
-            response = requests.get(url=everything_api, params=params, timeout=60)
-            
-            #start Mask
-            start_mask_image_list = response.json().get("start_mask_image_list")
-            start_mask_image_array = np.array(start_mask_image_list, dtype=np.uint8)
-            start_mask_image = Image.fromarray(start_mask_image_array)
-            st.session_state.start_mask = start_mask_image_array
-            
-            #start Sat
-            start_sat_image_list = response.json().get("start_sat_image_list")
-            start_sat_image_array = np.array(start_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
-            start_sat_image = Image.fromarray((start_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
-            st.session_state.start_sat = start_sat_image_array
         
-            #REPONSE WITH INFORMATION
+        factors = [1, 2, 3, 4, 5, 10, 25, 50, 100]
+        square_size_options = [5.12 * factor for factor in factors]
+        labels = {val: f"{val:.2f}" for val in square_size_options}
+        default_value = square_size_options[0]
+        square_size = 5.12
+        # square_size = st.select_slider('Square length (km)', 
+        #                              options=square_size_options, 
+        #                              value=default_value, 
+        #                              format_func=lambda x: labels[x])
 
-            #start vector
-            start_mask_vector = smooth_and_vectorize(start_mask_image_array, 9, '#307251', 0.4)
-            start_mask_vector = start_mask_vector.convert('RGBA')
-            st.session_state.start_vector_overlay = start_mask_vector
-            
-            #start overlay
-            start_mask_image_rgba = start_mask_image.convert('RGBA')
-            start_overlay = Image.alpha_composite(start_sat_image, start_mask_vector)
-            st.session_state.start_overlay = start_overlay
-            
-
-            # start metrics
-            start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array == 0) / start_mask_image_array.size) * 100), 1)
-            st.session_state.start_forest_cover_percent = start_forest_cover_percent
-            st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
-            
-            start_forest_cover_ha = ((start_forest_cover_percent/100)*26214400)/1000
-            st.session_state.start_forest_cover_ha = start_forest_cover_ha
-
-            
-            #End Mask
-            end_mask_image_list = response.json().get("end_mask_image_list")
-            end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
-            end_mask_image = Image.fromarray(end_mask_image_array)
-            st.session_state.end_mask = end_mask_image_array
-            
-            #End Sat
-            end_sat_image_list = response.json().get("end_sat_image_list")
-            end_sat_image_array = np.array(end_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
-            end_sat_image = Image.fromarray((end_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
-            st.session_state.end_sat = end_sat_image_array
+        #     #sample_number = st.slider('Number of samples', min_value=1, max_value=10)
+        sample_number = 1
         
-            # #rREPONSE WITH INFORMATION
+        params= {
+            'start_timeframe': start_timeframe,
+            'end_timeframe': end_timeframe,
+            'longitude': st.session_state.longitude_input,
+            'latitude': st.session_state.latitude_input,
+            'sample_number': sample_number,
+            'square_size': square_size
+        }
 
-            #End vector
-            end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#FF0000', 0.4)
-            end_mask_vector = end_mask_vector.convert('RGBA')
-            st.session_state.end_vector_overlay = end_mask_vector
+        everything_api = "http://localhost:8080/do_everything_self"
+        if st.button("✨ Click for magic ✨"):   
+            with st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
+                response = requests.get(url=everything_api, params=params, timeout=60)
+                
+                #start Mask
+                start_mask_image_list = response.json().get("start_mask_image_list")
+                start_mask_image_array = np.array(start_mask_image_list, dtype=np.uint8)
+                start_mask_image = Image.fromarray(start_mask_image_array)
+                st.session_state.start_mask = start_mask_image_array
+                
+                #start Sat
+                start_sat_image_list = response.json().get("start_sat_image_list")
+                start_sat_image_array = np.array(start_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+                start_sat_image = Image.fromarray((start_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
+                st.session_state.start_sat = start_sat_image_array
             
-            #End overlay
-            end_mask_image_rgba = end_mask_image.convert('RGBA')
-            end_overlay = Image.alpha_composite(end_sat_image, end_mask_vector)
-            st.session_state.end_overlay = end_overlay
-        
-            # End metrics
-            end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array == 0) / end_mask_image_array.size) * 100), 1)
-            st.session_state.end_forest_cover_percent = end_forest_cover_percent
-            st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
+                #start vector
+                start_mask_vector = smooth_and_vectorize(start_mask_image_array, 9, '#0C8346', 0.5) #color of initial forest
+                start_mask_vector = start_mask_vector.convert('RGBA')
+                st.session_state.start_vector_overlay = start_mask_vector
+                
+                #start overlay
+                start_mask_image_rgba = start_mask_image.convert('RGBA')
+                start_overlay = Image.alpha_composite(start_sat_image, start_mask_vector)
+                st.session_state.start_overlay = start_overlay
+                
+                # start metrics
+                start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
+                st.session_state.start_forest_cover_percent = start_forest_cover_percent
+                st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
+                
+                start_forest_cover_ha = ((start_forest_cover_percent/100)*26214400)/10000
+                st.session_state.start_forest_cover_ha = start_forest_cover_ha
+                
+                #End Mask
+                end_mask_image_list = response.json().get("end_mask_image_list")
+                end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
+                end_mask_image = Image.fromarray(end_mask_image_array)
+                st.session_state.end_mask = end_mask_image_array
+                
+                #End Sat
+                end_sat_image_list = response.json().get("end_sat_image_list")
+                end_sat_image_array = np.array(end_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+                end_sat_image = Image.fromarray((end_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
+                st.session_state.end_sat = end_sat_image_array
+                
+                #End vector
+                end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#0C8346', 0.5) #colour of remaining forest
+                end_mask_vector = end_mask_vector.convert('RGBA')
+                st.session_state.end_vector_overlay = end_mask_vector
+                
+                #End overlay
+                end_mask_image_rgba = end_mask_image.convert('RGBA')
+                end_overlay = Image.alpha_composite(end_sat_image, end_mask_vector)
+                st.session_state.end_overlay = end_overlay
             
-            end_forest_cover_ha = ((end_forest_cover_percent/100)* 26214400)/1000
-            st.session_state.end_forest_cover_ha = end_forest_cover_ha
+                # End metrics
+                end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array != 0) / end_mask_image_array.size) * 100), 1)
+                st.session_state.end_forest_cover_percent = end_forest_cover_percent
+                st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
+                
+                end_forest_cover_ha = ((end_forest_cover_percent/100)* 26214400)/10000
+                st.session_state.end_forest_cover_ha = end_forest_cover_ha
+                
+                # image info
+                start_info = response.json().get("start_date_info")
+                end_info = response.json().get("end_date_info")
+                st.session_state.info_intro = f'The closest cloud-free images to your desired start and end dates are from:'
+                st.session_state.start_info = start_info
+                st.session_state.end_info = end_info
+                
             
-            
-            #Total overlay
-            total_overlay = Image.alpha_composite(end_overlay, start_mask_vector)
-            st.session_state.total_overlay = total_overlay
-            
-            #Total metrics
-            total_deforestation = round(((end_forest_cover_percent/start_forest_cover_percent)*100),1)
-            st.session_state.total_deforestation = total_deforestation
-            
-            
-            #st.balloons()
+                #Calculated overlay
+                total_overlay_calculated_array  = start_mask_image_array - end_mask_image_array 
+                total_overlay_calculated_array = smooth_and_vectorize(total_overlay_calculated_array, 9, '#FF4C4B', 0.5) #color of deforested forest
+                total_overlay_calculated = total_overlay_calculated_array.convert('RGBA')
+                total_calculated_overlay = Image.alpha_composite(end_overlay, total_overlay_calculated)
+                st.session_state.total_calculated_overlay = total_calculated_overlay
+                
+                #Total overlay
+                total_overlay = Image.alpha_composite(end_overlay, start_mask_vector)
+                st.session_state.total_overlay = total_overlay
+                
+                #Total metrics
+                total_deforestation = round(((end_forest_cover_percent/start_forest_cover_percent)*100),1)
+                st.session_state.total_deforestation = total_deforestation
+                
+                st.session_state.expander_open = True
+                
+                #st.balloons()
 
 with example_col:
-    with st.container():
-        img = image_select(
-            "Choose an example",
-            images=[
-                "https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png",
-                "https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png"
-            ],
-            captions=["Brazilian Soy Farm", "Brazilian Soy Farm"],
-            return_value= 'index', 
-            index = 0
-        )
-    
-        if img == 0:
-            pass
+    with st.container(border=True, height = 247):
+        st.image('https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png', caption='Brazil soy')
+        if st.button('View on map   '):
+            st.session_state.latitude_input = -5.49000
+            st.session_state.longitude_input = -58.26000
+        if st.button('Calculate forest loss  '):
+            with st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
+                st.session_state.latitude_input = -5.49000
+                st.session_state.longitude_input = -58.26000
+                st.session_state.start_timeframe = "2020-10-10" 
+                st.session_state.end_timeframe = "2020-10-10" 
+                
+                params= {
+                        'start_timeframe': st.session_state.start_timeframe,
+                        'end_timeframe': st.session_state.end_timeframe,
+                        'longitude': st.session_state.longitude_input,
+                        'latitude': st.session_state.latitude_input,
+                        'sample_number': sample_number,
+                        'square_size': square_size
+                    }
+                response = requests.get(url=everything_api, params=params, timeout=60)
+                
+                #start Mask
+                start_mask_image_list = response.json().get("start_mask_image_list")
+                start_mask_image_array = np.array(start_mask_image_list, dtype=np.uint8)
+                start_mask_image = Image.fromarray(start_mask_image_array)
+                st.session_state.start_mask = start_mask_image_array
+                
+                #start Sat
+                start_sat_image_list = response.json().get("start_sat_image_list")
+                start_sat_image_array = np.array(start_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+                start_sat_image = Image.fromarray((start_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
+                st.session_state.start_sat = start_sat_image_array
             
-        if img == 1:
-            pass
-            # st.session_state.longitude_input = -55.26000
-            # st.session_state.latitude_input = -8.49000
-            # st.session_state.zoom = 12.5
+                #REPONSE WITH INFORMATION
 
+                #start vector
+                start_mask_vector = smooth_and_vectorize(start_mask_image_array, 9, '#307251', 0.4)
+                start_mask_vector = start_mask_vector.convert('RGBA')
+                st.session_state.start_vector_overlay = start_mask_vector
+                
+                #start overlay
+                start_mask_image_rgba = start_mask_image.convert('RGBA')
+                start_overlay = Image.alpha_composite(start_sat_image, start_mask_vector)
+                st.session_state.start_overlay = start_overlay
+                
+                st.session_state.total_calculated_overlay_map = start_mask_vector
+                
 
-# Calculate the map view state and polygon coordinates
+                # start metrics
+                start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
+                st.session_state.start_forest_cover_percent = start_forest_cover_percent
+                st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
+                
+                start_forest_cover_ha = ((start_forest_cover_percent/100)*26214400)/1000
+                st.session_state.start_forest_cover_ha = start_forest_cover_ha
+
+                
+                #End Mask
+                end_mask_image_list = response.json().get("end_mask_image_list")
+                end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
+                end_mask_image = Image.fromarray(end_mask_image_array)
+                st.session_state.end_mask = end_mask_image_array
+                
+                #End Sat
+                end_sat_image_list = response.json().get("end_sat_image_list")
+                end_sat_image_array = np.array(end_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+                end_sat_image = Image.fromarray((end_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
+                st.session_state.end_sat = end_sat_image_array
+            
+                # #rREPONSE WITH INFORMATION
+
+                #End vector
+                end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#307251', 0.4)
+                end_mask_vector = end_mask_vector.convert('RGBA')
+                st.session_state.end_vector_overlay = end_mask_vector
+                
+                #End overlay
+                end_mask_image_rgba = end_mask_image.convert('RGBA')
+                end_overlay = Image.alpha_composite(end_sat_image, end_mask_vector)
+                st.session_state.end_overlay = end_overlay
+            
+                # End metrics
+                end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array != 0) / end_mask_image_array.size) * 100), 1)
+                st.session_state.end_forest_cover_percent = end_forest_cover_percent
+                st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
+                
+                end_forest_cover_ha = ((end_forest_cover_percent/100)* 26214400)/1000
+                st.session_state.end_forest_cover_ha = end_forest_cover_ha
+                
+                #Calculated overlay
+                total_overlay_calculated_array  = start_mask_image_array - end_mask_image_array 
+                total_overlay_calculated_array = smooth_and_vectorize(total_overlay_calculated_array, 9, '#FF0000', 0.4)
+                total_overlay_calculated = total_overlay_calculated_array.convert('RGBA')
+                total_calculated_overlay = Image.alpha_composite(end_overlay, total_overlay_calculated)
+                
+                #Total overlay
+                total_overlay = Image.alpha_composite(end_overlay, start_mask_vector)
+                st.session_state.total_overlay = total_overlay
+                
+                #Total metrics
+                total_deforestation = round(((end_forest_cover_percent/start_forest_cover_percent)*100),1)
+                st.session_state.total_deforestation = total_deforestation   
+    with st.container(border=True, height = 247):
+        st.image('https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png', caption='Brazil soy')
+        if st.button('View on map '):
+            st.session_state.latitude_input = -5.49000
+            st.session_state.longitude_input = -58.26000
+        if st.button('Calculate forest loss'):
+            with st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
+                st.session_state.latitude_input = -5.49000
+                st.session_state.longitude_input = -58.26000
+                st.session_state.start_timeframe = "2020-10-10" 
+                st.session_state.end_timeframe = "2020-10-10" 
+                
+                params= {
+                        'start_timeframe': st.session_state.start_timeframe,
+                        'end_timeframe': st.session_state.end_timeframe,
+                        'longitude': st.session_state.longitude_input,
+                        'latitude': st.session_state.latitude_input,
+                        'sample_number': sample_number,
+                        'square_size': square_size
+                    }
+                response = requests.get(url=everything_api, params=params, timeout=60)
+                
+                #start Mask
+                start_mask_image_list = response.json().get("start_mask_image_list")
+                start_mask_image_array = np.array(start_mask_image_list, dtype=np.uint8)
+                start_mask_image = Image.fromarray(start_mask_image_array)
+                st.session_state.start_mask = start_mask_image_array
+                
+                #start Sat
+                start_sat_image_list = response.json().get("start_sat_image_list")
+                start_sat_image_array = np.array(start_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+                start_sat_image = Image.fromarray((start_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
+                st.session_state.start_sat = start_sat_image_array
+            
+                #REPONSE WITH INFORMATION
+
+                #start vector
+                start_mask_vector = smooth_and_vectorize(start_mask_image_array, 9, '#307251', 0.4)
+                start_mask_vector = start_mask_vector.convert('RGBA')
+                st.session_state.start_vector_overlay = start_mask_vector
+                
+                #start overlay
+                start_mask_image_rgba = start_mask_image.convert('RGBA')
+                start_overlay = Image.alpha_composite(start_sat_image, start_mask_vector)
+                st.session_state.start_overlay = start_overlay
+                
+                st.session_state.total_calculated_overlay_map = start_mask_vector
+                
+
+                # start metrics
+                start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
+                st.session_state.start_forest_cover_percent = start_forest_cover_percent
+                st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
+                
+                start_forest_cover_ha = ((start_forest_cover_percent/100)*26214400)/1000
+                st.session_state.start_forest_cover_ha = start_forest_cover_ha
+
+                
+                #End Mask
+                end_mask_image_list = response.json().get("end_mask_image_list")
+                end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
+                end_mask_image = Image.fromarray(end_mask_image_array)
+                st.session_state.end_mask = end_mask_image_array
+                
+                #End Sat
+                end_sat_image_list = response.json().get("end_sat_image_list")
+                end_sat_image_array = np.array(end_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+                end_sat_image = Image.fromarray((end_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
+                st.session_state.end_sat = end_sat_image_array
+            
+                # #rREPONSE WITH INFORMATION
+
+                #End vector
+                end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#307251', 0.4)
+                end_mask_vector = end_mask_vector.convert('RGBA')
+                st.session_state.end_vector_overlay = end_mask_vector
+                
+                #End overlay
+                end_mask_image_rgba = end_mask_image.convert('RGBA')
+                end_overlay = Image.alpha_composite(end_sat_image, end_mask_vector)
+                st.session_state.end_overlay = end_overlay
+            
+                # End metrics
+                end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array != 0) / end_mask_image_array.size) * 100), 1)
+                st.session_state.end_forest_cover_percent = end_forest_cover_percent
+                st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
+                
+                end_forest_cover_ha = ((end_forest_cover_percent/100)* 26214400)/1000
+                st.session_state.end_forest_cover_ha = end_forest_cover_ha
+                
+                #Calculated overlay
+                total_overlay_calculated_array  = start_mask_image_array - end_mask_image_array 
+                total_overlay_calculated_array = smooth_and_vectorize(total_overlay_calculated_array, 9, '#FF0000', 0.4)
+                total_overlay_calculated = total_overlay_calculated_array.convert('RGBA')
+                total_calculated_overlay = Image.alpha_composite(end_overlay, total_overlay_calculated)
+                
+                #Total overlay
+                total_overlay = Image.alpha_composite(end_overlay, start_mask_vector)
+                st.session_state.total_overlay = total_overlay
+                
+                #Total metrics
+                total_deforestation = round(((end_forest_cover_percent/start_forest_cover_percent)*100),1)
+                st.session_state.total_deforestation = total_deforestation   
+
 view_state = pdk.ViewState(
-    longitude=longitude_input,
-    latitude=latitude_input,
+    longitude=float(st.session_state.longitude_input),
+    latitude=float(st.session_state.latitude_input),
     zoom=12.5
 )
 
 half_side_length = float(square_size) / 2 / 110.574
 
 square_coords = [
-    [longitude_input - half_side_length, latitude_input - half_side_length],
-    [longitude_input + half_side_length, latitude_input - half_side_length],
-    [longitude_input + half_side_length, latitude_input + half_side_length],
-    [longitude_input - half_side_length, latitude_input + half_side_length],
-    [longitude_input - half_side_length, latitude_input - half_side_length]
+    [float(st.session_state.longitude_input) - half_side_length, float(st.session_state.latitude_input) - half_side_length],
+    [float(st.session_state.longitude_input) + half_side_length, float(st.session_state.latitude_input) - half_side_length],
+    [float(st.session_state.longitude_input) + half_side_length, float(st.session_state.latitude_input) + half_side_length],
+    [float(st.session_state.longitude_input) - half_side_length, float(st.session_state.latitude_input) + half_side_length],
+    [float(st.session_state.longitude_input) - half_side_length, float(st.session_state.latitude_input) - half_side_length]
 ]
 
 polygon_data = [{
@@ -213,7 +424,7 @@ polygon_data = [{
 end_mask_polygon_layer = pdk.Layer(
     "PolygonLayer", 
     data=None, 
-    get_polygon=st.session_state.end_vector_overlay,
+    get_polygon=st.session_state.total_calculated_overlay_map,
     get_line_color=[255, 0, 0, 255],  # Red color with full opacity for the border
     get_line_width=1,  # Width of the border
 )
@@ -229,38 +440,26 @@ polygon_layer = pdk.Layer(
     extruded=False
 )
 
-# Path to the PNG image
 BOUNDS = square_coords
-
-# Retrieve the vectorized mask image from the session state
-end_mask_vector = st.session_state.end_vector_overlay
-
-# # Convert the vectorized mask image to PNG format
-# if end_mask_vector:
-#     buffer = BytesIO()
-#     end_mask_vector.save(buffer, format="PNG")
-#     st.session_state.end_mask_png = buffer.getvalue()
-
-
-# # Create a BitmapLayer to overlay the PNG image on the map
-# bitmap_layer = pdk.Layer(
-#     "BitmapLayer", 
-#     data=None, 
-#     image=st.session_state.end_mask_png, 
-#     bounds=BOUNDS, 
-#     opacity=0.5  # Adjust opacity as needed
-# )
-
-# Place the BitmapLayer in the list of layers when creating the pydeck Deck object
+# Create a BitmapLayer to overlay the PNG image on the map
+bitmap_layer = pdk.Layer(
+    "BitmapLayer", 
+    data=None, 
+    image=st.session_state.total_calculated_overlay_map, 
+    bounds=BOUNDS, 
+    opacity=0.5  # Adjust opacity as needed
+)
 with map_col:
     st.pydeck_chart(pdk.Deck(
         map_style='mapbox://styles/mapbox/satellite-v9',
         initial_view_state=view_state,
-        layers=[polygon_layer],  # Add the BitmapLayer here
+        layers=[polygon_layer], # Add the BitmapLayer here
         tooltip={"text": "{name}"}
     ))
 
-with st.container():
+with st.expander(label='Output', expanded=st.session_state.expander_open):
+    st.markdown(f'{st.session_state.info_intro} {st.session_state.start_info} and {st.session_state.end_info}')
+    
     sat_col, forest_col, filler, overlay_col, metrics_col = st.columns([2, 2, 1, 6, 5])
 
     with sat_col:
@@ -279,7 +478,8 @@ with st.container():
     
     with overlay_col:
         st.markdown('#### Total Forest Change')
-        st.image(st.session_state.total_overlay)
+        st.image(st.session_state.total_calculated_overlay)
+        st.markdown('Red = deforestation, Green = remaining forest')
     
     with metrics_col:
         st.markdown('#### Metrics')
@@ -409,6 +609,7 @@ with st.container():
     # with col2:
     #     st.image("./images/after_resized.png", caption="After")
 
+
 # api = "http://localhost:8080/"
 # if st.button("Test"):   
 #     with st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
@@ -419,3 +620,47 @@ with st.container():
 
 
 
+
+        # img = image_select(
+        #     "Choose an example",
+        #     images=[
+        #         "https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png",
+        #         "https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png"
+        #     ],
+        #     captions=["Brazilian Soy Farm", "Brazilian Soy Farm"],
+        #     return_value= 'index', 
+        #     index = 0
+        # )
+    
+        # if img == 0:
+        #     pass
+            
+        # if img == 1:
+        #     pass
+            # st.session_state.longitude_input = -55.26000
+            # st.session_state.latitude_input = -8.49000
+            # st.session_state.zoom = 12.5
+
+            
+        
+        # img = image_select(
+        #     "Choose an example",
+        #     images=[
+        #         "https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png",
+        #         "https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png"
+        #     ],
+        #     captions=["Brazilian Soy Farm", "Brazilian Soy Farm"],
+        #     return_value= 'index', 
+        #     index = 0
+        # )
+    
+        # if img == 0:
+        #     pass
+            
+        # if img == 1:
+        #     pass
+            # st.session_state.longitude_input = -55.26000
+            # st.session_state.latitude_input = -8.49000
+            # st.session_state.zoom = 12.5
+
+# Calculate the map view state and polygon coordinates
