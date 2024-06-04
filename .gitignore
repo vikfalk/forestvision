@@ -40,5 +40,10 @@ raw_data/
 viktor_code.py
 # Python version
 .python-version
+<<<<<<< HEAD
+# Pycache
+__pycache__/
+=======
 # testing.py to run some checks
 testing.py
+>>>>>>> 4a1ce04ecc895cacc53bd3436556328db24449a4

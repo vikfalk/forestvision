@@ -95,18 +95,26 @@ def do_everything(
 @app.get("/get_image_from_satellite_self")
 def get_image_from_satellite_self():
     model = load_model('./deforestation_tracker/model_ressources/att_unet_4b.hdf5', custom_objects={'RepeatElements': RepeatElements})
-    image_array, request_info_date = load_img_array_from_satellite(request_type='4-band')
-    # Scale image array to have the same scale as training images that have been
-    # preprocessed with rasterio
-    max_values = np.max(image_array, axis=(0, 1))
-    image_array = image_array / max_values
-    # Retain the original satellite image and convert it to 3-band
-    original_image_array = image_array
-    original_image_array = original_image_array[:,:,:3]
+
+    # Retrieve two separate satellite images for RGB and fourth band, respectively
+    original_image_array, request_info_date = load_img_array_from_satellite(request_type='TrueColor')
+    four_b_array, date = load_img_array_from_satellite(request_type='4-band')
+
+    # Extract fourth band from 4-band request and normalize to values between 0 and 1
+    band_4 = four_b_array[:,:,3]
+    max_value = np.max(band_4)
+    band_4 = band_4 / max_value
+
+    # Stack normalized RGB image and normalized fourth band together
+    image_array = np.dstack((original_image_array, band_4))
+
+    # Turn the original satellite image into a list
     original_image_list = original_image_array.flatten().tolist()
+
     # Segment the 4-band version of the satellite image
     image_array = segment_self(image_array, model)
     image_list = image_array.flatten().tolist()
+
     return JSONResponse(content={"original_image_list": original_image_list,
                                 "segmented_image_list": image_list,
                                 "request_info_date": request_info_date})
@@ -121,29 +129,121 @@ def get_image_from_satellite_with_params_self(
     square_size: str):  # TODO: Pay attention to unused inputs.
     image_list = float(latitude), float(longitude), end_timeframe
     model = load_model('./deforestation_tracker/model_ressources/att_unet_4b.hdf5', custom_objects={'RepeatElements': RepeatElements})
-    image_array, request_info_date = load_img_array_from_satellite(
+
+    # Retrieve two separate satellite images for RGB and fourth band, respectively
+    original_image_array, request_info_date = load_img_array_from_satellite(
+        lat_deg=float(latitude),
+        lon_deg=float(longitude),
+        end_timeframe=str(end_timeframe),  # assuming format "2023-02-03"
+        request_type='TrueColor'
+    )
+    four_b_array, date = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
         end_timeframe=str(end_timeframe),  # assuming format "2023-02-03"
         request_type='4-band'
     )
 
-    # Scale image array to have the same scale as training images that have been
-    # preprocessed with rasterio
-    max_values = np.max(image_array, axis=(0, 1))
-    image_array = image_array / max_values
-    # Retain the original satellite image and convert it to 3-band
-    original_image_array = image_array
-    original_image_array = original_image_array[:,:,:3]
+    # Extract fourth band from 4-band request and normalize to values between 0 and 1
+    band_4 = four_b_array[:,:,3]
+    max_value = np.max(band_4)
+    band_4 = band_4 / max_value
+
+    # Stack normalized RGB image and normalized fourth band together
+    image_array = np.dstack((original_image_array, band_4))
+
+    # Turn the original satellite image into a list
     original_image_list = original_image_array.flatten().tolist()
+
     # Segment the 4-band version of the satellite image
     image_array = segment_self(image_array, model)
     image_list = image_array.flatten().tolist()
+
     return JSONResponse(content={"original_image_list": original_image_list,
-                                "segmented_image_list": image_list,
-                                "request_info_date": request_info_date})
+                                 "segmented_image_list": image_list,
+                                 "request_info_date": request_info_date})
+
+
+@app.get("/do_everything_self")
+def do_everything_self(
+    start_timeframe: str,  # TODO: Pay attention to unused inputs.
+    end_timeframe: str,
+    longitude: str,
+    latitude: str,
+    sample_number: str,  # TODO: Pay attention to unused inputs.
+    square_size: str):  # TODO: Pay attention to unused inputs.
+
+    model = load_model('./deforestation_tracker/model_ressources/att_unet_4b.hdf5', custom_objects={'RepeatElements': RepeatElements})
+
+    #End sat pull
+    end_sat_image_array, end_date_info = load_img_array_from_satellite(
+        lat_deg=float(latitude),
+        lon_deg=float(longitude),
+        end_timeframe=str(end_timeframe),  # assuming format "2023-02-03"
+        request_type='TrueColor'
+    )
+
+    # Start sat pull
+    start_sat_image_array, start_date_info = load_img_array_from_satellite(
+        lat_deg=float(latitude),
+        lon_deg=float(longitude),
+        end_timeframe=str(start_timeframe),  # assuming format "2023-02-03"
+        request_type='TrueColor'
+    )
+
+    # End 4-band pull
+    four_b_array_end, date = load_img_array_from_satellite(
+        lat_deg=float(latitude),
+        lon_deg=float(longitude),
+        end_timeframe=str(end_timeframe),  # assuming format "2023-02-03"
+        request_type='4-band'
+    )
+
+    # Start 4-band pull
+    four_b_array_start, date = load_img_array_from_satellite(
+        lat_deg=float(latitude),
+        lon_deg=float(longitude),
+        end_timeframe=str(start_timeframe),  # assuming format "2023-02-03"
+        request_type='4-band'
+    )
+
+    ## Extract fourth band from 4-band request and normalize to values between 0 and 1
+    band_4_end = four_b_array_end[:,:,3]
+    max_value = np.max(band_4_end)
+    band_4_end = band_4_end / max_value
+
+    band_4_start = four_b_array_start[:,:,3]
+    max_value = np.max(band_4_start)
+    band_4_start = band_4_start / max_value
+
+    # Stack normalized RGB image and normalized fourth band together
+    image_array_end = np.dstack((end_sat_image_array, band_4_end))
+    image_array_start = np.dstack((start_sat_image_array, band_4_start))
+
+    # Create segmentation masks
+    end_mask_image_array = segment(image_array_end, model)
+    end_mask_image_list = end_mask_image_array.tolist()
+
+    start_mask_image_array = segment(image_array_start, model)
+    start_mask_image_list = start_mask_image_array.tolist()
+
+    # Convert satellite images to lists
+    end_sat_image_list = end_sat_image_array.flatten().tolist()
+    start_sat_image_list = start_sat_image_array.flatten().tolist()
+
+    return JSONResponse(content={"end_mask_image_list": end_mask_image_list,
+                                 "end_sat_image_list": end_sat_image_list,
+                                 "start_mask_image_list": start_mask_image_list,
+                                 "start_sat_image_list": start_sat_image_list,
+                                 'start_date_info':start_date_info,
+                                 'end_date_info': end_date_info,
+                                 })
 
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ["PORT"]))
+    #latitude: float = -8.48638
+    #longitude: float = -55.26209
+    #end_timeframe: str = "2024-05-30"
+    #start_timeframe: str = "2020-05-30"
