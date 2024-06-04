@@ -40,3 +40,5 @@ raw_data/
 viktor_code.py
 # Python version
 .python-version
+# Pycache
+__pycache__/

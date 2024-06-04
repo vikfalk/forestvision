@@ -38,7 +38,7 @@ def segment_self(img_array: np.array, model) -> np.array:
     prediction = prediction.reshape((512,512,1))
 
     # converting predicted image to black and white
-    threshold = 0.57
+    threshold = 0.7
     prediction_array = (prediction > threshold).astype(np.uint8) * 255
     prediction_array = prediction_array.astype(np.uint8)
 
