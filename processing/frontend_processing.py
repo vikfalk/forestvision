@@ -30,7 +30,7 @@ def smooth_and_vectorize(array, smoothing, hex_code, opacity):
     smoothed_array = np.array(smoothed_image)
 
     # Binarize the smoothed image (invert the binary image)
-    _, binary_image = cv2.threshold(smoothed_array, 127, 255, cv2.THRESH_BINARY_INV)
+    _, binary_image = cv2.threshold(smoothed_array, 127, 255, cv2.THRESH_BINARY)
 
     # Create a mask from the binary image
     mask = Image.fromarray(binary_image).convert("L")
