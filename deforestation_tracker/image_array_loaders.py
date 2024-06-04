@@ -23,6 +23,7 @@ def load_img_array_from_satellite(
     optimal_tile = search_available_L2A_tiles(catalog=catalog_, bbox=box_, date_request=end_timeframe, range_days=91, maxCloudCoverage=10)
     if optimal_tile:
         # Request tile
+        #print(optimal_tile)
         img_array = request_image(
             box=box_, time_interval=(optimal_tile.get('date'), optimal_tile.get('date')), config=config_,
             image_size_px=512, resolution_m_per_px=10,  request_type=request_type
@@ -30,7 +31,7 @@ def load_img_array_from_satellite(
         #to_be_logged = (f"found optimal tile with penalty of {optimal_tile.get('penalty')}. Shape: {img_array.shape}, Mean: {img_array.flatten().mean()}")
         return img_array, optimal_tile.get('date')
     else:
-        #to_be_logged = (f"no tiles found for {end_timeframe} plus/minus 3 months with less than 10% Clouds.")
+        #to_be_logged print(f"no tiles found for {end_timeframe} plus/minus 3 months with less than 10% Clouds.")
         return None, None
 
 

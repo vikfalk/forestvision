@@ -90,8 +90,8 @@ def search_available_L2A_tiles(catalog, bbox:'bounding box', date_request, range
                                     }
                         ]
             properties.append(tile_properties)
-        optimal_tile = sorted(properties)[0][1]
-        optimal_tile['penalty'] = sorted(properties)[0][0]
+        optimal_tile = sorted(properties, key=lambda x: x[0])[0][1]
+        optimal_tile['penalty'] = sorted(properties, key=lambda x: x[0])[0][0]
         return optimal_tile
     else:
         return None
@@ -149,7 +149,7 @@ def request_image(box, image_size_px, resolution_m_per_px, time_interval, config
             SentinelHubRequest.input_data(
                 data_collection=DataCollection.SENTINEL2_L2A,
                 time_interval=time_interval,
-                other_args={"dataFilter": {"maxCloudCoverage": 1, "mosaickingOrder": "leastCC"}}
+                other_args={"dataFilter": {"maxCloudCoverage": 50, "mosaickingOrder": "leastCC"}}
             ),
         ],
         responses=[
@@ -159,7 +159,12 @@ def request_image(box, image_size_px, resolution_m_per_px, time_interval, config
         size=[image_size_px, image_size_px],
         config=config
     )
-    return request.get_data()[0]
+    img = request.get_data()[0]
+
+    if request_type == 'TrueColor':
+        return np.clip(img, 0, 1)
+    elif request_type == '4-band':
+        return img
 
 
 if __name__ == '__main__':

@@ -92,7 +92,7 @@ def do_everything(
 
 # Selfmade model endpoints
 
-@api_app.get("/get_image_from_satellite_self")
+@app.get("/get_image_from_satellite_self")
 def get_image_from_satellite_self():
     model = load_model('./deforestation_tracker/model_ressources/att_unet_4b.hdf5', custom_objects={'RepeatElements': RepeatElements})
     image_array = load_img_array_from_satellite(request_type='4-band')
