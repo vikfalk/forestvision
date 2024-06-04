@@ -160,6 +160,30 @@ def get_multiple_images_from_satellite(
     return JSONResponse(content={"test_img_list": test_img_list
                                 })
 
+# DAVIDS REWORKED VERSION
+# @app.get("/get_multiple_images_from_satellite")
+# def get_multiple_images_from_satellite(
+#         start_timeframe: str = "2020-05-13",
+#         end_timeframe: str = "2024-05-30",
+#         longitude: str = "-55.26209",  # TODO: Check if incoming data is really of type string
+#         latitude: str = "-8.48638",  # TODO: Check if incoming data is really of type string
+#         sample_number: str = "2"):  # TODO: Check if incoming data is really of type string
+#         # construct list with request dates
+#         start_dt, end_dt = dt.datetime.strptime(start_timeframe, "%Y-%m-%d"), dt.datetime.strptime(end_timeframe, "%Y-%m-%d")
+#         date_step_size = (end_dt - start_dt)/(int(sample_number) - 1)
+#         date_list = [dt.date.strftime(start_dt + i * date_step_size, "%Y-%m-%d") for i in range(int(sample_number))]
+#         date_list_loaded, img_list = load_multiple_imgs_from_sat(lat_deg=float(latitude), lon_deg=float(longitude), date_list=date_list, request_type='TrueColor')
+#         flattened_img_list = [img.flatten().tolist() for img in img_list]
+#         return JSONResponse(content={"test_img_list": flattened_img_list,
+#                                     "date_list_loaded": date_list_loaded})
+#         # # TEST CODE
+#         # content = {"test_img_list": flattened_img_list, "date_list_loaded": date_list_loaded}
+#         # return content
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ["PORT"]))
+    # # TEST CODE
+    # content_ = get_multiple_images_from_satellite()
+    # [print(date) for date in content_.get("date_list_loaded")]
+    # [print(img[:10]) for img in content_.get("test_img_list")]
