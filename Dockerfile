@@ -13,4 +13,4 @@ COPY deforestation_tracker deforestation_tracker
 COPY setup.py .
 
 # Command to run the API
-CMD uvicorn deforestation_tracker.main:app --host 0.0.0.0 --port $PORT
+CMD uvicorn deforestation_tracker.main_copy:app --host 0.0.0.0 --port $PORT
