@@ -8,7 +8,6 @@ from processing.frontend_processing import smooth_and_vectorize
 from streamlit_image_select import image_select
 import streamlit_lottie
 
-
 placeholder_image = Image.new("RGB", (512, 512), (15, 17, 22))
 
 if 'forest_loss' not in st.session_state:
@@ -58,9 +57,11 @@ with animation_col:
 with intro_col:
         st.lottie("https://lottie.host/9bc48342-5206-4456-8ea4-cce828f5fe15/fQVJJlzp4j.json", height = 180)
 
-input_col1, map_col, example_col = st.columns([4, 19, 4])
-with input_col1:
-    with st.container(border=True, height= 510):
+input_col1, map_col, example_col = st.columns([5, 20, 4])
+with input_col1:    
+    st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 15px;'><b>Inputs</b></p>", unsafe_allow_html=True)
+
+    with st.container(border=True, height= 470):
         # latitude_input = float(st.text_input('Latitude', '-8.49000',
         #                                     help= "Enter the longitude coordinates of your desired area of interest. Press enter to view on map."))
         # longitude_input = float(st.text_input('Longitude', '-55.26000',
@@ -99,8 +100,9 @@ with input_col1:
             'square_size': square_size
         }
 
-        everything_api = "http://localhost:8080/do_everything_self"
-        if st.button("✨ Click for magic ✨"):   
+        #everything_api = "http://localhost:8080/do_everything_self"
+        everything_api = "https://south-american-forest-llzimbumzq-oe.a.run.app/do_everything_self"
+        if st.button("✨ Click for magic ✨", use_container_width=True):   
             with st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
                 response = requests.get(url=everything_api, params=params, timeout=60)
                 
@@ -192,9 +194,10 @@ with input_col1:
                 #st.balloons()
 
 with example_col:
-    with st.container(border=True, height = 247):
-        st.image('https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png', caption='Brazil soy')
-        if st.button('View on map   '):
+    st.markdown("<p style='text-align: center; font-family: FreeMono, monospace;font-size: 15px;'><b>Examples</b></p>", unsafe_allow_html=True)
+    with st.container(border=True, height = 228):
+        st.image('https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png')
+        if st.button('View on map   ', use_container_width=True):
             st.session_state.latitude_input = -5.49000
             st.session_state.longitude_input = -58.26000
         if st.button('Calculate forest loss  '):
@@ -295,9 +298,9 @@ with example_col:
                 #Total metrics
                 total_deforestation = round(((end_forest_cover_percent/start_forest_cover_percent)*100),1)
                 st.session_state.total_deforestation = total_deforestation   
-    with st.container(border=True, height = 247):
-        st.image('https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png', caption='Brazil soy')
-        if st.button('View on map '):
+    with st.container(border=True, height = 228):
+        st.image('https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png')
+        if st.button('View on map ', use_container_width=True):
             st.session_state.latitude_input = -5.49000
             st.session_state.longitude_input = -58.26000
         if st.button('Calculate forest loss'):
