@@ -5,7 +5,6 @@ from PIL import Image
 import requests
 import numpy as np
 from processing.frontend_processing import smooth_and_vectorize
-from streamlit_image_select import image_select
 import streamlit_lottie
 
 placeholder_image = Image.new("RGB", (512, 512), (15, 17, 22))

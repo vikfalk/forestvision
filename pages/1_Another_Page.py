@@ -5,7 +5,6 @@ from PIL import Image
 import requests
 import numpy as np
 from processing.frontend_processing import smooth_and_vectorize, overlay_vector_on_mask
-from io import BytesIO
 
 placeholder_image = Image.new("RGB", (512, 512), (15, 17, 22))
 

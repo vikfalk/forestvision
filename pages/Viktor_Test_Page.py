@@ -5,8 +5,7 @@ from PIL import Image
 import requests
 import numpy as np
 from processing.frontend_processing import smooth_and_vectorize, overlay_vector_on_mask
-from io import BytesIO
-from streamlit_image_select import image_select
+
 
 placeholder_image = Image.new("RGB", (512, 512), (15, 17, 22))
 
@@ -165,27 +164,27 @@ with input_col1:
             
             #st.balloons()
 
-with example_col:
-    with st.container():
-        img = image_select(
-            "Choose an example",
-            images=[
-                "https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png",
-                "https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png"
-            ],
-            captions=["Brazilian Soy Farm", "Brazilian Soy Farm"],
-            return_value= 'index', 
-            index = 0
-        )
+# with example_col:
+#     with st.container():
+#         img = image_select(
+#             "Choose an example",
+#             images=[
+#                 "https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png",
+#                 "https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png"
+#             ],
+#             captions=["Brazilian Soy Farm", "Brazilian Soy Farm"],
+#             return_value= 'index', 
+#             index = 0
+#         )
     
-        if img == 0:
-            pass
+#         if img == 0:
+#             pass
             
-        if img == 1:
-            pass
-            # st.session_state.longitude_input = -55.26000
-            # st.session_state.latitude_input = -8.49000
-            # st.session_state.zoom = 12.5
+#         if img == 1:
+#             pass
+#             # st.session_state.longitude_input = -55.26000
+#             # st.session_state.latitude_input = -8.49000
+#             # st.session_state.zoom = 12.5
 
 
 # Calculate the map view state and polygon coordinates
