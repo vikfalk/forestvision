@@ -188,21 +188,29 @@ def get_multiple_images_from_satellite(
             max_value = np.max(band_4_at_date)
             band_4_at_date = band_4_at_date / max_value
             combined_img_arrays.append(np.dstack((vis_at_date, band_4_at_date)))
-        print(f'No of combined 4-band arrays: {len(combined_img_arrays)}')
-        print(f'Shape of 4-band arrays: {combined_img_arrays[0].shape}')
-        # Segment
-        # Create segmentation masks
-        # for i in combined_img_arrays:
-        #     print(i.shape)
+        # print(f'No of combined 4-band arrays: {len(combined_img_arrays)}')
+        # print(f'Shape of 4-band arrays: {combined_img_arrays[0].shape}')
 
+        # Segment
         segmented_arrays = [segment(img_at_date, model) for img_at_date in combined_img_arrays]
         print(f'Shape of segmented arrays: {segmented_arrays[0].shape}')
-        # processing of image arrays
+
+        # flatten image arrays
         original_img_list = [img.flatten().tolist() for img in combined_img_arrays]
-        original_img_list_flat = [x for img in original_img_list for x in img]
         segmented_img_list = [mask.flatten().tolist() for mask in segmented_arrays]
+
+        # delete instances where arrays are not correct shape (512x512)
+        for i, list in enumerate(segmented_img_list):
+            if len(list) != 262144:
+                date_list_loaded.pop(i)
+                original_img_list.pop(i)
+                segmented_img_list.pop(i)
+
+        # flatten list of lists
+        original_img_list_flat = [x for img in original_img_list for x in img]
         segmented_img_list_flat = [x for mask in segmented_img_list for x in mask]
-         return JSONResponse(content = {"date_list_loaded": date_list_loaded, "original_img_list": original_img_list_flat,
+
+        return JSONResponse(content = {"date_list_loaded": date_list_loaded, "original_img_list": original_img_list_flat,
                    "segmented_img_list": segmented_img_list_flat})
         # # TEST CODE
         # content = {"date_list_loaded": date_list_loaded, "original_img_list": original_img_list_flat,
@@ -210,13 +218,13 @@ def get_multiple_images_from_satellite(
         # return content
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ["PORT"]))
+    # import uvicorn
+    # uvicorn.run(app, host="0.0.0.0", port=int(os.environ["PORT"]))
     # # TEST CODE
-    # content_ = get_multiple_images_from_satellite(sample_number=2)
+    # content_ = get_multiple_images_from_satellite(sample_number=4)
     # [print(date) for date in content_.get("date_list_loaded")]
     # print(f'Length of original img list : {len(content_.get("original_img_list"))}')
     # print(f'Length of segmented img list : {len(content_.get("segmented_img_list"))}')
 
-    #[print(img) for img in content_.get("original_img_list")]
-    #[print(img[:1]) for img in content_.get("segmented_img_list")]
+    # [print(img) for img in content_.get("original_img_list")]
+    # [print(img[:1]) for img in content_.get("segmented_img_list")]
