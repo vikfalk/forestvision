@@ -202,7 +202,7 @@ def get_multiple_images_from_satellite(
         original_img_list_flat = [x for img in original_img_list for x in img]
         segmented_img_list = [mask.flatten().tolist() for mask in segmented_arrays]
         segmented_img_list_flat = [x for mask in segmented_img_list for x in mask]
-         return JSONResponse(content = {"date_list_loaded": date_list_loaded, "original_img_list": original_img_list_flat,
+        return JSONResponse(content = {"date_list_loaded": date_list_loaded, "original_img_list": original_img_list_flat,
                    "segmented_img_list": segmented_img_list_flat})
         # # TEST CODE
         # content = {"date_list_loaded": date_list_loaded, "original_img_list": original_img_list_flat,
