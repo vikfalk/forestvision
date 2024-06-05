@@ -4,6 +4,5 @@ numpy
 datetime
 pillow
 requests
-opencv-python
 opencv-python-headless
 streamlit_lottie
