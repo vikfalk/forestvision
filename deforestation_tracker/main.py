@@ -218,8 +218,8 @@ def get_multiple_images_from_satellite(
         # return content
 
 if __name__ == "__main__":
-    # import uvicorn
-    # uvicorn.run(app, host="0.0.0.0", port=int(os.environ["PORT"]))
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ["PORT"]))
     # # TEST CODE
     # content_ = get_multiple_images_from_satellite(sample_number=4)
     # [print(date) for date in content_.get("date_list_loaded")]
