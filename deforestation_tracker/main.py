@@ -143,47 +143,76 @@ def get_image_from_satellite_with_params_self(
                                 "segmented_image_list": image_list,
                                 "request_info_date": request_info_date})
 
-@app.get("/get_multiple_images_from_satellite")
-def get_multiple_images_from_satellite(
-    start_timeframe: str,  # TODO: Pay attention to unused inputs.
-    end_timeframe: str,
-    longitude: str,
-    latitude: str,
-    sample_number: str):  # TODO: Pay attention to unused inputs.
-    # construct list with request dates
-    start_dt, end_dt = dt.datetime.strptime(start_timeframe, "%Y-%m-%d"), dt.datetime.strptime(end_timeframe, "%Y-%m-%d")
-    date_step_size = (end_dt - start_dt)/(sample_number - 1)
-    date_list = [dt.date.strftime(start_dt + i * date_step_size, "%Y-%m-%d") for i in range(sample_number)]
-    date_list_loaded, img_list = load_multiple_imgs_from_sat(lat_deg=latitude, lon_deg=longitude, date_list=date_list, request_type='TrueColor')
-    test_img = img_list[0]
-    test_img_list = image_array.flatten().tolist()
-    return JSONResponse(content={"test_img_list": test_img_list
-                                })
-
-# DAVIDS REWORKED VERSION
 # @app.get("/get_multiple_images_from_satellite")
 # def get_multiple_images_from_satellite(
-#         start_timeframe: str = "2020-05-13",
-#         end_timeframe: str = "2024-05-30",
-#         longitude: str = "-55.26209",  # TODO: Check if incoming data is really of type string
-#         latitude: str = "-8.48638",  # TODO: Check if incoming data is really of type string
-#         sample_number: str = "2"):  # TODO: Check if incoming data is really of type string
-#         # construct list with request dates
-#         start_dt, end_dt = dt.datetime.strptime(start_timeframe, "%Y-%m-%d"), dt.datetime.strptime(end_timeframe, "%Y-%m-%d")
-#         date_step_size = (end_dt - start_dt)/(int(sample_number) - 1)
-#         date_list = [dt.date.strftime(start_dt + i * date_step_size, "%Y-%m-%d") for i in range(int(sample_number))]
-#         date_list_loaded, img_list = load_multiple_imgs_from_sat(lat_deg=float(latitude), lon_deg=float(longitude), date_list=date_list, request_type='TrueColor')
-#         flattened_img_list = [img.flatten().tolist() for img in img_list]
-#         return JSONResponse(content={"test_img_list": flattened_img_list,
-#                                     "date_list_loaded": date_list_loaded})
-#         # # TEST CODE
-#         # content = {"test_img_list": flattened_img_list, "date_list_loaded": date_list_loaded}
-#         # return content
+#     start_timeframe: str,  # TODO: Pay attention to unused inputs.
+#     end_timeframe: str,
+#     longitude: str,
+#     latitude: str,
+#     sample_number: str):  # TODO: Pay attention to unused inputs.
+#     # construct list with request dates
+#     start_dt, end_dt = dt.datetime.strptime(start_timeframe, "%Y-%m-%d"), dt.datetime.strptime(end_timeframe, "%Y-%m-%d")
+#     date_step_size = (end_dt - start_dt)/(sample_number - 1)
+#     date_list = [dt.date.strftime(start_dt + i * date_step_size, "%Y-%m-%d") for i in range(sample_number)]
+#     date_list_loaded, img_list = load_multiple_imgs_from_sat(lat_deg=latitude, lon_deg=longitude, date_list=date_list, request_type='TrueColor')
+#     test_img = img_list[0]
+#     test_img_list = test_img.flatten().tolist()
+#     return JSONResponse(content={"test_img_list": test_img_list
+#                                 })
+
+# DAVIDS REWORKED VERSION
+@app.get("/get_multiple_images_from_satellite")
+def get_multiple_images_from_satellite(
+        start_timeframe: str = "2020-05-13",
+        end_timeframe: str = "2024-05-30",
+        longitude: str = "-55.26209",  # TODO: Check if incoming data is really of type string
+        latitude: str = "-8.48638",  # TODO: Check if incoming data is really of type string
+        sample_number: str = "2"):  # TODO: Check if incoming data is really of type string
+
+        model = load_model('./deforestation_tracker/model_ressources/att_unet_4b.hdf5', custom_objects={'RepeatElements': RepeatElements})
+
+        # construct list with request dates
+        start_dt, end_dt = dt.datetime.strptime(start_timeframe, "%Y-%m-%d"), dt.datetime.strptime(end_timeframe, "%Y-%m-%d")
+        date_step_size = (end_dt - start_dt)/(int(sample_number) - 1)
+        date_list = [dt.date.strftime(start_dt + i * date_step_size, "%Y-%m-%d") for i in range(int(sample_number))]
+        # load both 3 band and 4 band images
+        date_list_loaded, img_list = load_multiple_imgs_from_sat(lat_deg=float(latitude), lon_deg=float(longitude), date_list=date_list, request_type='TrueColor')
+
+        # Join 3-band with 4-band
+        number_of_dates = len(date_list_loaded)
+        combined_img_arrays = []
+        for date in range(number_of_dates):
+            band_4_at_date = img_list[(date + number_of_dates)][:,:,3]#(datefour_b_array_end[:,:,3]
+            vis_at_date = img_list[date]
+            # Normalize 4-band channel to values between 0 and 1
+            max_value = np.max(band_4_at_date)
+            band_4_at_date = band_4_at_date / max_value
+            combined_img_arrays.append(np.dstack((vis_at_date, band_4_at_date)))
+        print(f'No of combined 4-band arrays: {len(combined_img_arrays)}')
+        print(f'Shape of 4-band arrays: {combined_img_arrays[0].shape}')
+        # Segment
+        # Create segmentation masks
+        # for i in combined_img_arrays:
+        #     print(i.shape)
+
+        segmented_arrays = [segment(img_at_date, model) for img_at_date in combined_img_arrays]
+        print(f'Shape of segmented arrays: {segmented_arrays[0].shape}')
+        # processing of image arrays
+        original_img_list = [img.flatten().tolist() for img in combined_img_arrays]
+        segmented_img_list = [mask.flatten().tolist() for mask in segmented_arrays]
+
+         return JSONResponse(content={"date_list_loaded": date_list_loaded, "original_img_list": original_img_list,
+                   "segmented_img_list": segmented_img_list})
+        # # TEST CODE
+        # content = {"date_list_loaded": date_list_loaded, "original_img_list": original_img_list,
+        #            "segmented_img_list": segmented_img_list}
+        # return content
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ["PORT"]))
     # # TEST CODE
-    # content_ = get_multiple_images_from_satellite()
+    # content_ = get_multiple_images_from_satellite(sample_number=6)
     # [print(date) for date in content_.get("date_list_loaded")]
-    # [print(img[:10]) for img in content_.get("test_img_list")]
+    # [print(img[:1]) for img in content_.get("original_img_list")]
+    # [print(img[:1]) for img in content_.get("segmented_img_list")]
