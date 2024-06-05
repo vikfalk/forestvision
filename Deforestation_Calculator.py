@@ -108,8 +108,8 @@ with input_col1:
                     st.session_state.longitude_input = st.session_state.longitude_input
                     st.session_state.zoom = 12.5
 
-        everything_api = "http://localhost:8080/do_everything_self"
-        #everything_api = "https://south-american-forest-llzimbumzq-oe.a.run.app/do_everything_self"
+        #everything_api = "http://localhost:8080/do_everything_self"
+        everything_api = "https://south-american-forest-llzimbumzq-oe.a.run.app/do_everything_self"
         if st.button("**Calculate deforestation**", use_container_width=True, type='primary', help= 'Click me to calculate deforestation.'):   
             with st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
                 response = requests.get(url=everything_api, params=params, timeout=60)
