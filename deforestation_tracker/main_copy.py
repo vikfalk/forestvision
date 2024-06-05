@@ -278,8 +278,8 @@ def get_multiple_images_from_satellite(
     segmented_img_list = [mask.flatten().tolist() for mask in segmented_arrays]
 
     # delete instances where arrays are not correct shape (512x512)
-    for i, list in enumerate(segmented_img_list):
-        if len(list) != 262144:
+    for i, list_ in enumerate(segmented_img_list):
+        if len(list_) != 262144:
             date_list_loaded.pop(i)
             original_img_list.pop(i)
             segmented_img_list.pop(i)
