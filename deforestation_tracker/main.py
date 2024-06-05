@@ -199,20 +199,24 @@ def get_multiple_images_from_satellite(
         print(f'Shape of segmented arrays: {segmented_arrays[0].shape}')
         # processing of image arrays
         original_img_list = [img.flatten().tolist() for img in combined_img_arrays]
+        original_img_list_flat = [x for img in original_img_list for x in img]
         segmented_img_list = [mask.flatten().tolist() for mask in segmented_arrays]
-
-         return JSONResponse(content={"date_list_loaded": date_list_loaded, "original_img_list": original_img_list,
-                   "segmented_img_list": segmented_img_list})
+        segmented_img_list_flat = [x for mask in segmented_img_list for x in mask]
+         return JSONResponse(content = {"date_list_loaded": date_list_loaded, "original_img_list": original_img_list_flat,
+                   "segmented_img_list": segmented_img_list_flat})
         # # TEST CODE
-        # content = {"date_list_loaded": date_list_loaded, "original_img_list": original_img_list,
-        #            "segmented_img_list": segmented_img_list}
+        # content = {"date_list_loaded": date_list_loaded, "original_img_list": original_img_list_flat,
+        #            "segmented_img_list": segmented_img_list_flat}
         # return content
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ["PORT"]))
     # # TEST CODE
-    # content_ = get_multiple_images_from_satellite(sample_number=6)
+    # content_ = get_multiple_images_from_satellite(sample_number=2)
     # [print(date) for date in content_.get("date_list_loaded")]
-    # [print(img[:1]) for img in content_.get("original_img_list")]
-    # [print(img[:1]) for img in content_.get("segmented_img_list")]
+    # print(f'Length of original img list : {len(content_.get("original_img_list"))}')
+    # print(f'Length of segmented img list : {len(content_.get("segmented_img_list"))}')
+
+    #[print(img) for img in content_.get("original_img_list")]
+    #[print(img[:1]) for img in content_.get("segmented_img_list")]
