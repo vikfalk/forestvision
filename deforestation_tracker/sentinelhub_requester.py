@@ -232,6 +232,7 @@ def sentinel_build_request(config, box, request_type, request_date, image_size_p
 
 
 if __name__ == '__main__':
+    pass
     # Defining request parameters
     # lat_deg = -8.48638
     # lon_deg = -55.26209
