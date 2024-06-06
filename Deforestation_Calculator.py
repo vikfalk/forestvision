@@ -102,7 +102,7 @@ with input_col1:
         st.session_state.longitude_input = st.text_input('Longitude', '-55.26000')
         
         
-        start_timeframe = st.date_input('Start date', dt.datetime(2021, 1, 1), 
+        start_timeframe = st.date_input('Start date', dt.datetime(2017, 6, 30), 
                                         min_value=dt.datetime(2017, 1, 1),
                                         max_value= dt.datetime(2024, 12, 31), 
                                         help= "Select the start and end date of your desired timeframe.")
@@ -287,7 +287,6 @@ with input_col1:
                 with st.session_state.input_spinner_placeholder:
                     st.markdown('No suitable image found near your start date. Please try another.')
                     
-
 with example_col:
     st.markdown("<p style='text-align: center; font-family: FreeMono, monospace;font-size: 15px;'><b>Examples</b></p>", unsafe_allow_html=True)
     with st.container(border=True, height = 228):
@@ -737,7 +736,7 @@ if st.session_state.show_container:
                 st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 22px;'><b>Total Forest Change</b></p>", unsafe_allow_html=True)
                 st.image(st.session_state.total_calculated_overlay)
                 #st.markdown('🟩 Remaining forest 🟥 Deforestation ')
-                st.image('legend3.png')
+                st.image('https://vikfalk.github.io/deforestation_frontend/example_images/legend.png')
                 
     
         #         st.session_state.total_calculated_overlay.save(buffer, format="PNG")
