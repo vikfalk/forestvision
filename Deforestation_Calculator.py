@@ -63,12 +63,12 @@ if 'forest_loss' not in st.session_state:
     # st.session_state.forest_color = '#0C8346'
     # st.session_state.deforestation_color = '#FF4C4B'
 
-col1, col2, col3 = st.columns([2, 12, 2])
+col1, col2, col3 = st.columns([2, 9.5, 2])
 with col1:
         st.lottie("https://lottie.host/9bc48342-5206-4456-8ea4-cce828f5fe15/fQVJJlzp4j.json", height = 200)
     
 with col2:
-    st.markdown("<h1 style='text-align: center; font-family: FreeMono, monospace;font-size: 100px; color: #FFFFFF;'>ForestVision AI</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; font-family: FreeMono, monospace;font-size: 130px; color: #FFFFFF;'>ForestVision</h1>", unsafe_allow_html=True)
     import streamlit as st
 
     # Add custom CSS for the horizontal line
@@ -84,7 +84,7 @@ with col2:
     # Use the custom class in a markdown divider
     st.markdown('<hr class="custom-divider">', unsafe_allow_html=True)
 
-    st.markdown("<p style='text-align: center; alphafont-size: 16px; opacity: 0.5; color: #FFFFFF;'>Track forest area change of an area using real-time satellite data by inputting coordinates on the left or choosing an example on the right.</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; alphafont-size: 16px; opacity: 1; color: #FFFFFF;'>Track forest area change of an area using real-time satellite data by inputting coordinates on the left or choosing an example on the right.</h1>", unsafe_allow_html=True)
     
 with col3:
         st.lottie("https://lottie.host/9bc48342-5206-4456-8ea4-cce828f5fe15/fQVJJlzp4j.json", height = 200)
@@ -291,8 +291,8 @@ with input_col1:
 with example_col:
     st.markdown("<p style='text-align: center; font-family: FreeMono, monospace;font-size: 15px;'><b>Examples</b></p>", unsafe_allow_html=True)
     with st.container(border=True, height = 228):
-        st.image('brazil.png') #3000 x 1690 px
-        #st.image('https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png')
+        #st.image('brazil.png') #3000 x 1690 px
+        st.image('https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png')
         if st.button('View on map   ', use_container_width=True):
             st.session_state.latitude_input = -12.11463
             st.session_state.longitude_input = -60.83938
@@ -462,8 +462,8 @@ with example_col:
                     st.markdown('No suitable image found near your start date. Please try another.')
     
     with st.container(border=True, height = 228):
-        st.image('bolivia2.png') #3000 x 1690 px
-        #st.image('https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png')
+        #st.image('bolivia.png') #3000 x 1690 px
+        st.image('https://vikfalk.github.io/deforestation_frontend/example_images/bolivia.png')
         if st.button('View on map    ', use_container_width=True):
             st.session_state.latitude_input = -12.11463
             st.session_state.longitude_input = -60.83938
@@ -707,7 +707,7 @@ if st.session_state.show_container:
 if st.session_state.show_container:
     with st.container(border = True):
             #st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 22px;'><b>Summary</b></p>", unsafe_allow_html=True)
-            st.markdown(f"**Summary:** {st.session_state.info_intro} {st.session_state.start_info} and {st.session_state.end_info}. If you'd like to dive deeper, with more time intervals, see the expander below this section.")
+            st.markdown(f"**Summary:** {st.session_state.info_intro} {st.session_state.start_info} and {st.session_state.end_info}. This area witnessed a {round(st.session_state.total_deforestation)}% decrease in forest cover over this timeframe.")
 if st.session_state.show_container:
     with st.container(border = False):
         #col1, col2 = st.columns([3, 8])
@@ -736,7 +736,8 @@ if st.session_state.show_container:
             with st.container(border=True, height = 620):
                 st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 22px;'><b>Total Forest Change</b></p>", unsafe_allow_html=True)
                 st.image(st.session_state.total_calculated_overlay)
-                st.markdown('🟩 Remaining forest 🟥 Deforestation ')
+                #st.markdown('🟩 Remaining forest 🟥 Deforestation ')
+                st.image('legend3.png')
                 
     
         #         st.session_state.total_calculated_overlay.save(buffer, format="PNG")
