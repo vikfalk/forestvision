@@ -292,7 +292,7 @@ with example_col:
     st.markdown("<p style='text-align: center; font-family: FreeMono, monospace;font-size: 15px;'><b>Examples</b></p>", unsafe_allow_html=True)
     with st.container(border=True, height = 228):
         #st.image('brazil.png') #3000 x 1690 px
-        st.image('https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png')
+        st.image('https://vikfalk.github.io/deforestation_frontend/example_images/brazil2.png')
         if st.button('View on map   ', use_container_width=True):
             st.session_state.latitude_input = -12.11463
             st.session_state.longitude_input = -60.83938
