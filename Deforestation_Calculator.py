@@ -47,6 +47,11 @@ if 'forest_loss' not in st.session_state:
     st.session_state.start_timeframe = dt.datetime(2021, 1, 1)
     st.session_state.total_deforestation_ha = 0
     
+    st.session_state.annual_co2_loss = 0
+    st.session_state.beef_equ = 0
+    st.session_state.loft_loss = 0
+    st.session_state.berg_loss = 0
+     
     st.session_state.expander_open = False
     st.session_state.info_intro = ' '
     st.session_state.start_info = ' '
@@ -193,7 +198,6 @@ with input_col1:
                     st.session_state.end_forest_cover_percent = end_forest_cover_percent
                     st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
                     
-            
                     # image info
                     start_info = response.json().get("start_date_info")
                     end_info = response.json().get("end_date_info")
@@ -215,11 +219,7 @@ with input_col1:
                     #Total metrics
                     total_deforestation = round((100 - (end_forest_cover_percent/start_forest_cover_percent)*100),1)
                     st.session_state.total_deforestation = total_deforestation
-                    
-                    st.session_state.expander_open = True
-                    st.session_state.show_container = True
-                    st.session_state.zoom = 12.5
-                    
+               
                     #Metrics
                     ## Start metrics
                     # Forest cover and forest loss in percent
@@ -261,6 +261,10 @@ with input_col1:
                     # Equivalent of hectare loss in terms of Le Wagon loft space (187 m²)
                     loft_loss = total_deforestation_ha*10000/187
                     st.session_state.loft_loss = loft_loss
+                    
+                    # Equivalent of hectare loss in terms of Berghains
+                    berg_loss = total_deforestation_ha*10000/2838
+                    st.session_state.berg_loss = berg_loss
 
                     # Environmental impact (CO2 loss), assumption: 11 tons per hectare
                     annual_co2_loss = start_annual_co2 - end_annual_co2
@@ -273,12 +277,15 @@ with input_col1:
                     # Equivalent of CO2 loss in kg of beef, assumption: 0.1 tons per kg
                     beef_equ = annual_co2_loss/0.1
                     st.session_state.beef_equ = beef_equ
-                    
-                    
-                    
-                    
+            
+                         
+                    st.session_state.expander_open = True
+                    st.session_state.show_container = True
+                    st.session_state.zoom = 12.5
+
             except (requests.RequestException, ValueError) as e:
-                st.markdown('No suitable image found near your start date. Please try another.')
+                with st.session_state.input_spinner_placeholder:
+                    st.markdown('No suitable image found near your start date. Please try another.')
                     
 
 with example_col:
@@ -287,125 +294,17 @@ with example_col:
         st.image('brazil.png') #3000 x 1690 px
         #st.image('https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png')
         if st.button('View on map   ', use_container_width=True):
-            st.session_state.latitude_input = -5.49000
-            st.session_state.longitude_input = -58.26000
-            st.session_state.zoom = 12.5
-        if st.button('Calculate ', use_container_width=True, type='primary'):
-            with st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
-                st.session_state.latitude_input = -5.49000
-                st.session_state.longitude_input = -58.26000
-                st.session_state.start_timeframe = "2020-10-10" 
-                st.session_state.end_timeframe = "2020-10-10"
-                st.session_state.zoom = 12
-                
-                params= {
-                        'start_timeframe': st.session_state.start_timeframe,
-                        'end_timeframe': st.session_state.end_timeframe,
-                        'longitude': st.session_state.longitude_input,
-                        'latitude': st.session_state.latitude_input,
-                        'sample_number': sample_number,
-                        'square_size': square_size
-                    }
-                response = requests.get(url=everything_api, params=params, timeout=60)
-                
-                #start Mask
-                start_mask_image_list = response.json().get("start_mask_image_list")
-                start_mask_image_array = np.array(start_mask_image_list, dtype=np.uint8)
-                start_mask_image = Image.fromarray(start_mask_image_array)
-                st.session_state.start_mask = start_mask_image_array
-                
-                #start Sat
-                start_sat_image_list = response.json().get("start_sat_image_list")
-                start_sat_image_array = np.array(start_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
-                start_sat_image = Image.fromarray((start_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
-                st.session_state.start_sat = start_sat_image_array
-            
-                #REPONSE WITH INFORMATION
-
-                #start vector
-                start_mask_vector = smooth_and_vectorize(start_mask_image_array, 9, '#307251', 0.4)
-                start_mask_vector = start_mask_vector.convert('RGBA')
-                st.session_state.start_vector_overlay = start_mask_vector
-                
-                #start overlay
-                start_mask_image_rgba = start_mask_image.convert('RGBA')
-                start_overlay = Image.alpha_composite(start_sat_image, start_mask_vector)
-                st.session_state.start_overlay = start_overlay
-                
-                st.session_state.total_calculated_overlay_map = start_mask_vector
-                
-
-                # start metrics
-                start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
-                st.session_state.start_forest_cover_percent = start_forest_cover_percent
-                st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
-                
-                start_forest_cover_ha = ((start_forest_cover_percent/100)*26214400)/1000
-                st.session_state.start_forest_cover_ha = start_forest_cover_ha
-
-                
-                #End Mask
-                end_mask_image_list = response.json().get("end_mask_image_list")
-                end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
-                end_mask_image = Image.fromarray(end_mask_image_array)
-                st.session_state.end_mask = end_mask_image_array
-                
-                #End Sat
-                end_sat_image_list = response.json().get("end_sat_image_list")
-                end_sat_image_array = np.array(end_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
-                end_sat_image = Image.fromarray((end_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
-                st.session_state.end_sat = end_sat_image_array
-            
-                # #rREPONSE WITH INFORMATION
-
-                #End vector
-                end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#307251', 0.4)
-                end_mask_vector = end_mask_vector.convert('RGBA')
-                st.session_state.end_vector_overlay = end_mask_vector
-                
-                #End overlay
-                end_mask_image_rgba = end_mask_image.convert('RGBA')
-                end_overlay = Image.alpha_composite(end_sat_image, end_mask_vector)
-                st.session_state.end_overlay = end_overlay
-            
-                # End metrics
-                end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array != 0) / end_mask_image_array.size) * 100), 1)
-                st.session_state.end_forest_cover_percent = end_forest_cover_percent
-                st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
-                
-                end_forest_cover_ha = ((end_forest_cover_percent/100)* 26214400)/1000
-                st.session_state.end_forest_cover_ha = end_forest_cover_ha
-                
-                #Calculated overlay
-                total_overlay_calculated_array  = start_mask_image_array - end_mask_image_array 
-                total_overlay_calculated_array = smooth_and_vectorize(total_overlay_calculated_array, 9, '#FF0000', 0.4)
-                total_overlay_calculated = total_overlay_calculated_array.convert('RGBA')
-                total_calculated_overlay = Image.alpha_composite(end_overlay, total_overlay_calculated)
-                
-                #Total overlay
-                total_overlay = Image.alpha_composite(end_overlay, start_mask_vector)
-                st.session_state.total_overlay = total_overlay
-                
-                #Total metrics
-                total_deforestation = round(((end_forest_cover_percent/start_forest_cover_percent)*100),1)
-                st.session_state.total_deforestation = total_deforestation   
-   
-    
-    
-    with st.container(border=True, height = 228):
-        st.image('bolivia2.png') #3000 x 1690 px
-        if st.button('View on map ', use_container_width=True):
             st.session_state.latitude_input = -12.11463
             st.session_state.longitude_input = -60.83938
             st.session_state.zoom = 12.5
-        if st.button('Calculate', use_container_width=True, type='primary'):
-            with st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
-                st.session_state.latitude_input = -12.11463
-                st.session_state.longitude_input = -60.83938
-                st.session_state.start_timeframe = "2017-08-24" 
-                st.session_state.end_timeframe = "2024-04-24" 
-                
-                params= {
+        if st.button('Calculate ', use_container_width=True, type='primary'):
+            st.session_state.latitude_input = -12.11463
+            st.session_state.longitude_input = -60.83938
+            st.session_state.zoom = 12.5
+            st.session_state.start_timeframe = "2017-08-24"
+            st.session_state.end_timeframe = "2024-04-24"
+            
+            params= {
                         'start_timeframe': st.session_state.start_timeframe,
                         'end_timeframe': st.session_state.end_timeframe,
                         'longitude': st.session_state.longitude_input,
@@ -413,92 +312,326 @@ with example_col:
                         'sample_number': sample_number,
                         'square_size': square_size
                     }
-                response = requests.get(url=everything_api, params=params, timeout=60)
-                
-                #start Mask
-                start_mask_image_list = response.json().get("start_mask_image_list")
-                start_mask_image_array = np.array(start_mask_image_list, dtype=np.uint8)
-                start_mask_image = Image.fromarray(start_mask_image_array)
-                st.session_state.start_mask = start_mask_image_array
-                
-                #start Sat
-                start_sat_image_list = response.json().get("start_sat_image_list")
-                start_sat_image_array = np.array(start_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
-                start_sat_image = Image.fromarray((start_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
-                st.session_state.start_sat = start_sat_image_array
             
-                #REPONSE WITH INFORMATION
-
-                #start vector
-                start_mask_vector = smooth_and_vectorize(start_mask_image_array, 9, '#307251', 0.4)
-                start_mask_vector = start_mask_vector.convert('RGBA')
-                st.session_state.start_vector_overlay = start_mask_vector
-                
-                #start overlay
-                start_mask_image_rgba = start_mask_image.convert('RGBA')
-                start_overlay = Image.alpha_composite(start_sat_image, start_mask_vector)
-                st.session_state.start_overlay = start_overlay
-                
-                st.session_state.total_calculated_overlay_map = start_mask_vector
-                
-
-                # start metrics
-                start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
-                st.session_state.start_forest_cover_percent = start_forest_cover_percent
-                st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
-                
-                start_forest_cover_ha = ((start_forest_cover_percent/100)*26214400)/1000
-                st.session_state.start_forest_cover_ha = start_forest_cover_ha
-
-                
-                #End Mask
-                end_mask_image_list = response.json().get("end_mask_image_list")
-                end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
-                end_mask_image = Image.fromarray(end_mask_image_array)
-                st.session_state.end_mask = end_mask_image_array
-                
-                #End Sat
-                end_sat_image_list = response.json().get("end_sat_image_list")
-                end_sat_image_array = np.array(end_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
-                end_sat_image = Image.fromarray((end_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
-                st.session_state.end_sat = end_sat_image_array
+            try:
+                with st.session_state.input_spinner_placeholder, st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
+                    response = requests.get(url=everything_api, params=params, timeout=60)
             
-                # #rREPONSE WITH INFORMATION
-
-                #End vector
-                end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#307251', 0.4)
-                end_mask_vector = end_mask_vector.convert('RGBA')
-                st.session_state.end_vector_overlay = end_mask_vector
+                with st.session_state.input_spinner_placeholder,st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
+                    #start Mask
+                    start_mask_image_list = response.json().get("start_mask_image_list")
+                    start_mask_image_array = np.array(start_mask_image_list, dtype=np.uint8)
+                    start_mask_image = Image.fromarray(start_mask_image_array)
+                    st.session_state.start_mask = start_mask_image_array
+                    
+                    #start Sat
+                    start_sat_image_list = response.json().get("start_sat_image_list")
+                    start_sat_image_array = np.array(start_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+                    start_sat_image = Image.fromarray((start_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
+                    st.session_state.start_sat = start_sat_image_array
                 
-                #End overlay
-                end_mask_image_rgba = end_mask_image.convert('RGBA')
-                end_overlay = Image.alpha_composite(end_sat_image, end_mask_vector)
-                st.session_state.end_overlay = end_overlay
+                    #start vector
+                    start_mask_vector = smooth_and_vectorize(start_mask_image_array, 9, '#00B272', 0.5) #color of initial forest
+                    start_mask_vector = start_mask_vector.convert('RGBA')
+                    st.session_state.start_vector_overlay = start_mask_vector
+                    
+                    #start overlay
+                    start_mask_image_rgba = start_mask_image.convert('RGBA')
+                    start_overlay = Image.alpha_composite(start_sat_image, start_mask_vector)
+                    st.session_state.start_overlay = start_overlay
+                    
+                    # start metrics
+                    start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
+                    st.session_state.start_forest_cover_percent = start_forest_cover_percent
+                    st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
+                    
+                    #End Mask
+                    end_mask_image_list = response.json().get("end_mask_image_list")
+                    end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
+                    end_mask_image = Image.fromarray(end_mask_image_array)
+                    st.session_state.end_mask = end_mask_image_array
+                    
+                    #End Sat
+                    end_sat_image_list = response.json().get("end_sat_image_list")
+                    end_sat_image_array = np.array(end_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+                    end_sat_image = Image.fromarray((end_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
+                    st.session_state.end_sat = end_sat_image_array
+                    
+                    #End vector
+                    end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#00B272', 0.5) #colour of remaining forest
+                    end_mask_vector = end_mask_vector.convert('RGBA')
+                    st.session_state.end_vector_overlay = end_mask_vector
+                    
+                    #End overlay
+                    end_mask_image_rgba = end_mask_image.convert('RGBA')
+                    end_overlay = Image.alpha_composite(end_sat_image, end_mask_vector)
+                    st.session_state.end_overlay = end_overlay
+                
+                    # End metrics
+                    end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array != 0) / end_mask_image_array.size) * 100), 1)
+                    st.session_state.end_forest_cover_percent = end_forest_cover_percent
+                    st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
+                    
+                    # image info
+                    start_info = response.json().get("start_date_info")
+                    end_info = response.json().get("end_date_info")
+                    st.session_state.info_intro = f'The closest cloud-free images to your desired start and end dates are from:'
+                    st.session_state.start_info = start_info
+                    st.session_state.end_info = end_info
+                    
+                    #Calculated overlay
+                    total_overlay_calculated_array  = start_mask_image_array - end_mask_image_array 
+                    total_overlay_calculated_array = smooth_and_vectorize(total_overlay_calculated_array, 9, '#994636', 0.5) #color of deforested forest
+                    total_overlay_calculated = total_overlay_calculated_array.convert('RGBA')
+                    total_calculated_overlay = Image.alpha_composite(end_overlay, total_overlay_calculated)
+                    st.session_state.total_calculated_overlay = total_calculated_overlay
+                    
+                    #Total overlay
+                    total_overlay = Image.alpha_composite(end_overlay, start_mask_vector)
+                    st.session_state.total_overlay = total_overlay
+                    
+                    #Total metrics
+                    total_deforestation = round((100 - (end_forest_cover_percent/start_forest_cover_percent)*100),1)
+                    st.session_state.total_deforestation = total_deforestation
+               
+                    #Metrics
+                    ## Start metrics
+                    # Forest cover and forest loss in percent
+                    start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
+                    st.session_state.start_forest_cover_percent = start_forest_cover_percent
+                    st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
+
+                    # Forest cover in hectares
+                    start_forest_cover_ha = (start_forest_cover_percent/100)*2621.44
+                    st.session_state.start_forest_cover_ha = start_forest_cover_ha
+
+                    # Annual CO2 absorption in tons
+                    start_annual_co2 = start_forest_cover_ha*11
+                    st.session_state.start_annual_co2 = start_annual_co2
+
+                    ## End metrics
+                    # Forest cover and forest loss in percent
+                    end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array != 0) / end_mask_image_array.size) * 100), 1)
+                    st.session_state.end_forest_cover_percent = end_forest_cover_percent
+                    st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
+
+                    # Forest cover in hectares
+                    end_forest_cover_ha = (end_forest_cover_percent/100)* 2621.44
+                    st.session_state.end_forest_cover_ha = end_forest_cover_ha
+
+                    # Annual CO2 absorption in tons
+                    end_annual_co2 = end_forest_cover_ha*11
+                    st.session_state.end_annual_co2 = end_annual_co2
+
+                    ## Total metrics
+                    # Forest loss in percent
+                    total_deforestation = round((100-(end_forest_cover_percent/start_forest_cover_percent)*100),1)
+                    st.session_state.total_deforestation = total_deforestation
+
+                    # Forest loss in hectares
+                    total_deforestation_ha = round((start_forest_cover_ha - end_forest_cover_ha), 1)
+                    st.session_state.total_deforestation_ha = total_deforestation_ha
+
+                    # Equivalent of hectare loss in terms of Le Wagon loft space (187 m²)
+                    loft_loss = total_deforestation_ha*10000/187
+                    st.session_state.loft_loss = loft_loss
+                    
+                    # Equivalent of hectare loss in terms of Berghains
+                    berg_loss = total_deforestation_ha*10000/2838
+                    st.session_state.berg_loss = berg_loss
+
+                    # Environmental impact (CO2 loss), assumption: 11 tons per hectare
+                    annual_co2_loss = start_annual_co2 - end_annual_co2
+                    st.session_state.annual_co2_loss = annual_co2_loss
+
+                    # Equivalent of CO2 loss in terms of annual per capita CO2 emission, assumption: 5 tons per capita
+                    human_co2_cons_equ = annual_co2_loss/5
+                    st.session_state.human_co2_cons_equ = human_co2_cons_equ
+
+                    # Equivalent of CO2 loss in kg of beef, assumption: 0.1 tons per kg
+                    beef_equ = annual_co2_loss/0.1
+                    st.session_state.beef_equ = beef_equ
             
-                # End metrics
-                end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array != 0) / end_mask_image_array.size) * 100), 1)
-                st.session_state.end_forest_cover_percent = end_forest_cover_percent
-                st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
-                
-                end_forest_cover_ha = ((end_forest_cover_percent/100)* 26214400)/1000
-                st.session_state.end_forest_cover_ha = end_forest_cover_ha
-                
-                #Calculated overlay
-                total_overlay_calculated_array  = start_mask_image_array - end_mask_image_array 
-                total_overlay_calculated_array = smooth_and_vectorize(total_overlay_calculated_array, 9, '#994636', 1)
-                total_overlay_calculated = total_overlay_calculated_array.convert('RGBA')
-                total_calculated_overlay = Image.alpha_composite(end_overlay, total_overlay_calculated)
-                
-                #Total overlay
-                total_overlay = Image.alpha_composite(end_overlay, start_mask_vector)
-                st.session_state.total_overlay = total_overlay
-                
-                #Total metrics
-                total_deforestation = round((100 - (end_forest_cover_percent/start_forest_cover_percent)*100),1)
-                st.session_state.total_deforestation = total_deforestation   
-                
-                st.session_state.zoom = 12.5
+                         
+                    st.session_state.expander_open = True
+                    st.session_state.show_container = True
+                    st.session_state.zoom = 12.5
 
+            except (requests.RequestException, ValueError) as e:
+                with st.session_state.input_spinner_placeholder:
+                    st.markdown('No suitable image found near your start date. Please try another.')
+    
+    with st.container(border=True, height = 228):
+        st.image('bolivia2.png') #3000 x 1690 px
+        #st.image('https://vikfalk.github.io/deforestation_frontend/example_images/brazil.png')
+        if st.button('View on map    ', use_container_width=True):
+            st.session_state.latitude_input = -12.11463
+            st.session_state.longitude_input = -60.83938
+            st.session_state.zoom = 12.5
+        if st.button('Calculate      ', use_container_width=True, type='primary'):
+            st.session_state.latitude_input = -12.11463
+            st.session_state.longitude_input = -60.83938
+            st.session_state.zoom = 12.5
+            st.session_state.start_timeframe = "2017-08-24"
+            st.session_state.end_timeframe = "2024-04-24"
+            
+            params= {
+                        'start_timeframe': st.session_state.start_timeframe,
+                        'end_timeframe': st.session_state.end_timeframe,
+                        'longitude': st.session_state.longitude_input,
+                        'latitude': st.session_state.latitude_input,
+                        'sample_number': sample_number,
+                        'square_size': square_size
+                    }
+            
+            try:
+                with st.session_state.input_spinner_placeholder, st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
+                    response = requests.get(url=everything_api, params=params, timeout=60)
+            
+                with st.session_state.input_spinner_placeholder,st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
+                    #start Mask
+                    start_mask_image_list = response.json().get("start_mask_image_list")
+                    start_mask_image_array = np.array(start_mask_image_list, dtype=np.uint8)
+                    start_mask_image = Image.fromarray(start_mask_image_array)
+                    st.session_state.start_mask = start_mask_image_array
+                    
+                    #start Sat
+                    start_sat_image_list = response.json().get("start_sat_image_list")
+                    start_sat_image_array = np.array(start_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+                    start_sat_image = Image.fromarray((start_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
+                    st.session_state.start_sat = start_sat_image_array
+                
+                    #start vector
+                    start_mask_vector = smooth_and_vectorize(start_mask_image_array, 9, '#00B272', 0.5) #color of initial forest
+                    start_mask_vector = start_mask_vector.convert('RGBA')
+                    st.session_state.start_vector_overlay = start_mask_vector
+                    
+                    #start overlay
+                    start_mask_image_rgba = start_mask_image.convert('RGBA')
+                    start_overlay = Image.alpha_composite(start_sat_image, start_mask_vector)
+                    st.session_state.start_overlay = start_overlay
+                    
+                    # start metrics
+                    start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
+                    st.session_state.start_forest_cover_percent = start_forest_cover_percent
+                    st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
+                    
+                    #End Mask
+                    end_mask_image_list = response.json().get("end_mask_image_list")
+                    end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
+                    end_mask_image = Image.fromarray(end_mask_image_array)
+                    st.session_state.end_mask = end_mask_image_array
+                    
+                    #End Sat
+                    end_sat_image_list = response.json().get("end_sat_image_list")
+                    end_sat_image_array = np.array(end_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+                    end_sat_image = Image.fromarray((end_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
+                    st.session_state.end_sat = end_sat_image_array
+                    
+                    #End vector
+                    end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#00B272', 0.5) #colour of remaining forest
+                    end_mask_vector = end_mask_vector.convert('RGBA')
+                    st.session_state.end_vector_overlay = end_mask_vector
+                    
+                    #End overlay
+                    end_mask_image_rgba = end_mask_image.convert('RGBA')
+                    end_overlay = Image.alpha_composite(end_sat_image, end_mask_vector)
+                    st.session_state.end_overlay = end_overlay
+                
+                    # End metrics
+                    end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array != 0) / end_mask_image_array.size) * 100), 1)
+                    st.session_state.end_forest_cover_percent = end_forest_cover_percent
+                    st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
+                    
+                    # image info
+                    start_info = response.json().get("start_date_info")
+                    end_info = response.json().get("end_date_info")
+                    st.session_state.info_intro = f'The closest cloud-free images to your desired start and end dates are from:'
+                    st.session_state.start_info = start_info
+                    st.session_state.end_info = end_info
+                    
+                    #Calculated overlay
+                    total_overlay_calculated_array  = start_mask_image_array - end_mask_image_array 
+                    total_overlay_calculated_array = smooth_and_vectorize(total_overlay_calculated_array, 9, '#994636', 0.5) #color of deforested forest
+                    total_overlay_calculated = total_overlay_calculated_array.convert('RGBA')
+                    total_calculated_overlay = Image.alpha_composite(end_overlay, total_overlay_calculated)
+                    st.session_state.total_calculated_overlay = total_calculated_overlay
+                    
+                    #Total overlay
+                    total_overlay = Image.alpha_composite(end_overlay, start_mask_vector)
+                    st.session_state.total_overlay = total_overlay
+                    
+                    #Total metrics
+                    total_deforestation = round((100 - (end_forest_cover_percent/start_forest_cover_percent)*100),1)
+                    st.session_state.total_deforestation = total_deforestation
+               
+                    #Metrics
+                    ## Start metrics
+                    # Forest cover and forest loss in percent
+                    start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
+                    st.session_state.start_forest_cover_percent = start_forest_cover_percent
+                    st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
+
+                    # Forest cover in hectares
+                    start_forest_cover_ha = (start_forest_cover_percent/100)*2621.44
+                    st.session_state.start_forest_cover_ha = start_forest_cover_ha
+
+                    # Annual CO2 absorption in tons
+                    start_annual_co2 = start_forest_cover_ha*11
+                    st.session_state.start_annual_co2 = start_annual_co2
+
+                    ## End metrics
+                    # Forest cover and forest loss in percent
+                    end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array != 0) / end_mask_image_array.size) * 100), 1)
+                    st.session_state.end_forest_cover_percent = end_forest_cover_percent
+                    st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
+
+                    # Forest cover in hectares
+                    end_forest_cover_ha = (end_forest_cover_percent/100)* 2621.44
+                    st.session_state.end_forest_cover_ha = end_forest_cover_ha
+
+                    # Annual CO2 absorption in tons
+                    end_annual_co2 = end_forest_cover_ha*11
+                    st.session_state.end_annual_co2 = end_annual_co2
+
+                    ## Total metrics
+                    # Forest loss in percent
+                    total_deforestation = round((100-(end_forest_cover_percent/start_forest_cover_percent)*100),1)
+                    st.session_state.total_deforestation = total_deforestation
+
+                    # Forest loss in hectares
+                    total_deforestation_ha = round((start_forest_cover_ha - end_forest_cover_ha), 1)
+                    st.session_state.total_deforestation_ha = total_deforestation_ha
+
+                    # Equivalent of hectare loss in terms of Le Wagon loft space (187 m²)
+                    loft_loss = total_deforestation_ha*10000/187
+                    st.session_state.loft_loss = loft_loss
+                    
+                    # Equivalent of hectare loss in terms of Berghains
+                    berg_loss = total_deforestation_ha*10000/2838
+                    st.session_state.berg_loss = berg_loss
+
+                    # Environmental impact (CO2 loss), assumption: 11 tons per hectare
+                    annual_co2_loss = start_annual_co2 - end_annual_co2
+                    st.session_state.annual_co2_loss = annual_co2_loss
+
+                    # Equivalent of CO2 loss in terms of annual per capita CO2 emission, assumption: 5 tons per capita
+                    human_co2_cons_equ = annual_co2_loss/5
+                    st.session_state.human_co2_cons_equ = human_co2_cons_equ
+
+                    # Equivalent of CO2 loss in kg of beef, assumption: 0.1 tons per kg
+                    beef_equ = annual_co2_loss/0.1
+                    st.session_state.beef_equ = beef_equ
+            
+                         
+                    st.session_state.expander_open = True
+                    st.session_state.show_container = True
+                    st.session_state.zoom = 12.5
+
+            except (requests.RequestException, ValueError) as e:
+                with st.session_state.input_spinner_placeholder:
+                    st.markdown('No suitable image found near your start date. Please try another.')
+    
 view_state = pdk.ViewState(
     longitude=float(st.session_state.longitude_input),
     latitude=float(st.session_state.latitude_input),
@@ -557,22 +690,24 @@ with map_col:
     ))
     
 st.markdown(' ')
-col1, col2, col3 = st.columns([11, 3, 11])
-with col1:
-    st.markdown('---')
-with col2:
-    st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 30px;'><b>Output</b></p>", unsafe_allow_html=True)
-with col3:
-    st.markdown('---')
     
 if 'show_container' not in st.session_state:
     st.session_state.show_container = False
+    
+if st.session_state.show_container:
+    with st.container():
+        col1, col2, col3 = st.columns([11, 3, 11])
+        with col1:
+            st.markdown('---')
+        with col2:
+            st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 30px;'><b>Output</b></p>", unsafe_allow_html=True)
+        with col3:
+            st.markdown('---')
 
 if st.session_state.show_container:
     with st.container(border = True):
             #st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 22px;'><b>Summary</b></p>", unsafe_allow_html=True)
-            st.markdown(f'**Summary:** {st.session_state.info_intro} {st.session_state.start_info} and {st.session_state.end_info}. If you would like to dive deeper, with more time intervals, see the expander below this section.')
-        
+            st.markdown(f"**Summary:** {st.session_state.info_intro} {st.session_state.start_info} and {st.session_state.end_info}. If you'd like to dive deeper, with more time intervals, see the expander below this section.")
 if st.session_state.show_container:
     with st.container(border = False):
         #col1, col2 = st.columns([3, 8])
@@ -617,7 +752,7 @@ if st.session_state.show_container:
             with st.container(border=True, height = 620):
                 st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 22px;'><b>Metrics</b></p>", unsafe_allow_html=True)
 
-                forest_loss_percent_tab, forest_loss_ha_tab, tab3, tab4 = st.tabs(['Forest Loss (%)', 'Forest Loss (ha)', 'Enviromental Impact', 'EUDR Classification'])
+                forest_loss_percent_tab, forest_loss_ha_tab, env_tab = st.tabs(['Forest Loss (%)', 'Forest Loss (ha)', 'Enviromental Impact'])
                 with forest_loss_percent_tab:
                     st.markdown('Start date forest cover')
                     st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #262730; border-radius: 10px; width: {st.session_state.start_forest_cover_percent_int}%; height: 50px; padding: 5px">'
@@ -633,7 +768,7 @@ if st.session_state.show_container:
 
                     st.markdown("###")
                     st.markdown(
-                            '<h3 style="color: white; font-size: 24px;">Total change in forest area</h3>'
+                            '<h3 style="color: white; font-size: 24px;">Total change in forest cover</h3>'
                             '</div>', unsafe_allow_html=True)
 
                     st.markdown('<div style="display: flex; justify-content: center; align-items: center; background-color: #994636; border-radius: 10px; height: 150px; padding: 5px"; border>'
@@ -642,14 +777,14 @@ if st.session_state.show_container:
              
                 with forest_loss_ha_tab:
                     st.markdown('Start date forest area (hectares)')
-                    st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #00B272; border-radius: 10px; width: {st.session_state.start_forest_cover_percent_int}%; height: 50px; padding: 5px">'
+                    st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #262730; border-radius: 10px; width: {st.session_state.start_forest_cover_percent_int}%; height: 50px; padding: 5px">'
                                 f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.start_forest_cover_ha:.1f} ha</p>'
                                 '</div>', unsafe_allow_html=True)
                     st.markdown(' ')
 
                     st.markdown('End date forest area (hectares)')
 
-                    st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #994636; border-radius: 10px; width: {st.session_state.end_forest_cover_percent_int}%; height: 50px; padding: 5px">'
+                    st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #262730; border-radius: 10px; width: {st.session_state.end_forest_cover_percent_int}%; height: 50px; padding: 5px">'
                                 f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.end_forest_cover_ha:.1f} ha</p>'
                                 '</div>', unsafe_allow_html=True)
 
@@ -658,6 +793,46 @@ if st.session_state.show_container:
                             '<h3 style="color: white; font-size: 24px;">Total change in forest area</h3>'
                             '</div>', unsafe_allow_html=True)
 
-                    st.markdown('<div style="display: flex; justify-content: center; align-items: center; background-color: #262630; border-radius: 10px; height: 150px; padding: 5px"; border>'
+                    st.markdown('<div style="display: flex; justify-content: center; align-items: center; background-color: #994636; border-radius: 10px; height: 150px; padding: 5px"; border>'
                             f'<p style="color: white; font-size: 80px; font-weight: bold; margin: 0;">- {st.session_state.total_deforestation_ha} ha</p>'
                             '</div>', unsafe_allow_html=True)
+                with env_tab:
+                    st.markdown('This loss of forest is equivalent to...')
+                    st.markdown('')
+                    st.markdown('##### Area (ha)')
+                    sub1, sub2 = env_tab.columns([2,2])
+                    st.markdown(
+                                    """
+                                <style>
+                                [data-testid="stMetricValue"] {
+                                    font-size: 50px;
+                                }
+                                </style>
+                                """,
+                                    unsafe_allow_html=True,
+                        )
+                    with sub1:
+                        st.metric(value = round(st.session_state.loft_loss), label = '🚗 LeWagon Berlin Lofts', help = 'Equivalent to 187m2')                        
+                    with sub2:
+                        st.metric(value = round(st.session_state.berg_loss), label = ' 🏢 Berghains', help = "Equivalent to 2838 m2. But it's just a guess, none of us have gotten in...")
+                    st.markdown('####')
+                    st.markdown('##### CO2 (tons)')
+                    sub1, sub2 = env_tab.columns([2,2])
+                    st.markdown(
+                                    """
+                                <style>
+                                [data-testid="stMetricValue"] {
+                                    font-size: 50px;
+                                }
+                                </style>
+                                """,
+                                    unsafe_allow_html=True,
+                        )
+                    with sub1:                                    
+                         st.metric(value = round(st.session_state.annual_co2_loss), label = '✈️ Annual per capita emissions')      
+                        
+                    with sub2:
+                        st.metric(value = round(st.session_state.beef_equ), label = '🐮 Kilograms of beef', help = 'Based on the production of this amount of beef. Assumption: 0.1 tons CO2 per kg')
+                        
+                    
+                  
