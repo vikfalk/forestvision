@@ -12,7 +12,6 @@ def day_difference_calculator(row):
         date_obj_1 = dt.datetime.strptime(row.date, '%Y-%m-%d').date()
         date_obj_2 = dt.datetime.strptime(row.prev_date, '%Y-%m-%d').date()
         difference = date_obj_1 - date_obj_2
-        difference.days
         return difference.days
     except TypeError:
         return pd.NA
@@ -96,16 +95,15 @@ df = (pd.DataFrame({
         .assign(date=lambda df_: df_.apply(date_reformatter, axis=1))
         .fillna(0)
         .set_index("date")
-        .round(1)
 )
 
 # DATA VISUALIZATION
-df_perc_cumu = df[["cover_difference_perc_cumu"]].reset_index().rename(columns={
+df_perc_cumu = df[["cover_difference_perc_cumu"]].round(1).reset_index().rename(columns={
     "date": "Dates",
-    "cover_difference_perc_cumu": "Forest Coverage Loss in %"})
-df_ha_monthly = df[["ha_per_months"]].reset_index().rename(columns={
+    "cover_difference_perc_cumu": "Coverage Loss in %"})
+df_ha_monthly = df[["ha_per_months"]].round(1).reset_index().rename(columns={
     "date": "Dates",
-    "ha_per_months": "Monthly Loss in Previous Period"})
+    "ha_per_months": "Monthy Loss in Hectar"})
 
 with st.container(border=False):
     st.markdown(f"<p style='text-align: center; font-family: FreeMono, monospace; font-size: 25px;'><b>Deforestation Over Time</b></p>", unsafe_allow_html=True)
@@ -117,12 +115,31 @@ with st.container(border=False):
     with st.container(border=True):
         col_a, col_b = st.columns(2)
         with col_a.container(border=False):
-                st.markdown(f"<p style='text-align: center; font-family: FreeMono, monospace; font-size: 15px;'><b>Forest Loss Since Start Date</b></p>", unsafe_allow_html=True)
-                st.bar_chart(df_perc_cumu, x="Dates", y="Forest Coverage Loss in %")
+                st.markdown(f"<p style='text-align: center; font-family: FreeMono, monospace; font-size: 15px;'><b>Coverage Lost Since Start</b></p>", unsafe_allow_html=True)
+                st.bar_chart(df_perc_cumu, x="Dates", y="Coverage Loss in %")
 
         with col_b.container(border=False):
-                st.markdown(f"<p style='text-align: center; font-family: FreeMono, monospace; font-size: 15px;'><b>Monthly Forest Loss in Hectar</b></p>", unsafe_allow_html=True)
-                st.bar_chart(df_ha_monthly, x="Dates", y="Monthly Loss in Previous Period")
+                st.markdown(f"<p style='text-align: center; font-family: FreeMono, monospace; font-size: 15px;'><b>Monthly Loss Rate</b></p>", unsafe_allow_html=True)
+                st.bar_chart(df_ha_monthly, x="Dates", y="Monthy Loss in Hectar")
 
-st.table(df.T)
-st.write(df)
+# DATA SUPPLY
+renamed_df = (df
+ .drop(columns=["months_since_prev"])
+ .rename(columns={
+    'coverage': 'Coverage in Percent',
+    'days_since_prev': 'Days Passed Since Previous Cloud-Free Image',
+    'cover_difference_perc': 'Forest Coverage Change in Previous Period (%)',
+    'cover_difference_perc_cumu': 'Cum. Difference in Coverage in Previous Period (%)',
+    'cover_difference_ha': 'Forest Area Change in Previous Period (Hectar)',
+    'cover_difference_ha_cumu': 'Cum. Forest Area Change in Previous Period (Hectar)',
+    'ha_per_months': 'Montly Area Loss Rate in Previous Period'
+     })
+ .astype('float32')
+ .round(2)
+)
+with st.container(border=False):
+    st.write(renamed_df.T)
+    # Other Options:
+    # st.table(renamed_df)
+    # st.table(renamed_df.T)
+    # st.write(renamed_df)
