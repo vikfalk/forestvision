@@ -51,6 +51,7 @@ if 'forest_loss' not in st.session_state:
     st.session_state.beef_equ = 0
     st.session_state.loft_loss = 0
     st.session_state.berg_loss = 0
+    st.session_state.human_co2_cons_equ = 0
      
     st.session_state.expander_open = False
     st.session_state.info_intro = ' '
@@ -271,7 +272,7 @@ with input_col1:
                     st.session_state.annual_co2_loss = annual_co2_loss
 
                     # Equivalent of CO2 loss in terms of annual per capita CO2 emission, assumption: 5 tons per capita
-                    human_co2_cons_equ = annual_co2_loss/5
+                    human_co2_cons_equ = annual_co2_loss/4.7
                     st.session_state.human_co2_cons_equ = human_co2_cons_equ
 
                     # Equivalent of CO2 loss in kg of beef, assumption: 0.1 tons per kg
@@ -444,7 +445,7 @@ with example_col:
                     st.session_state.annual_co2_loss = annual_co2_loss
 
                     # Equivalent of CO2 loss in terms of annual per capita CO2 emission, assumption: 5 tons per capita
-                    human_co2_cons_equ = annual_co2_loss/5
+                    human_co2_cons_equ = annual_co2_loss/4.7
                     st.session_state.human_co2_cons_equ = human_co2_cons_equ
 
                     # Equivalent of CO2 loss in kg of beef, assumption: 0.1 tons per kg
@@ -615,7 +616,7 @@ with example_col:
                     st.session_state.annual_co2_loss = annual_co2_loss
 
                     # Equivalent of CO2 loss in terms of annual per capita CO2 emission, assumption: 5 tons per capita
-                    human_co2_cons_equ = annual_co2_loss/5
+                    human_co2_cons_equ = annual_co2_loss/4.7
                     st.session_state.human_co2_cons_equ = human_co2_cons_equ
 
                     # Equivalent of CO2 loss in kg of beef, assumption: 0.1 tons per kg
@@ -778,14 +779,14 @@ if st.session_state.show_container:
                 with forest_loss_ha_tab:
                     st.markdown('Start date forest area (hectares)')
                     st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #262730; border-radius: 10px; width: {st.session_state.start_forest_cover_percent_int}%; height: 50px; padding: 5px">'
-                                f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.start_forest_cover_ha:.1f} ha</p>'
+                                f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.start_forest_cover_ha:.0f} ha</p>'
                                 '</div>', unsafe_allow_html=True)
                     st.markdown(' ')
 
                     st.markdown('End date forest area (hectares)')
 
                     st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #262730; border-radius: 10px; width: {st.session_state.end_forest_cover_percent_int}%; height: 50px; padding: 5px">'
-                                f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.end_forest_cover_ha:.1f} ha</p>'
+                                f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.end_forest_cover_ha:.0f} ha</p>'
                                 '</div>', unsafe_allow_html=True)
 
                     st.markdown("###")
@@ -794,7 +795,7 @@ if st.session_state.show_container:
                             '</div>', unsafe_allow_html=True)
 
                     st.markdown('<div style="display: flex; justify-content: center; align-items: center; background-color: #994636; border-radius: 10px; height: 150px; padding: 5px"; border>'
-                            f'<p style="color: white; font-size: 80px; font-weight: bold; margin: 0;">- {st.session_state.total_deforestation_ha} ha</p>'
+                            f'<p style="color: white; font-size: 80px; font-weight: bold; margin: 0;">- {st.session_state.total_deforestation_ha:.0f} ha</p>'
                             '</div>', unsafe_allow_html=True)
                 with env_tab:
                     st.markdown('This loss of forest is equivalent to...')
@@ -829,7 +830,7 @@ if st.session_state.show_container:
                                     unsafe_allow_html=True,
                         )
                     with sub1:                                    
-                         st.metric(value = round(st.session_state.annual_co2_loss), label = '✈️ Annual per capita emissions')      
+                         st.metric(value = round(st.session_state.human_co2_cons_equ), label = '✈️ Annual per capita emissions', help = 'Assumption: 4.7 tonnes CO2 emitted annually per capita.')      
                         
                     with sub2:
                         st.metric(value = round(st.session_state.beef_equ), label = '🐮 Kilograms of beef', help = 'Based on the production of this amount of beef. Assumption: 0.1 tons CO2 per kg')
