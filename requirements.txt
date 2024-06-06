@@ -6,3 +6,5 @@ pillow
 requests
 opencv-python-headless
 streamlit_lottie
+pandas
+bytesbufio

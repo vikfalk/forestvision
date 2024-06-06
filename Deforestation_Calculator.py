@@ -573,8 +573,6 @@ if st.session_state.show_container:
             #st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 22px;'><b>Summary</b></p>", unsafe_allow_html=True)
             st.markdown(f'**Summary:** {st.session_state.info_intro} {st.session_state.start_info} and {st.session_state.end_info}. If you would like to dive deeper, with more time intervals, see the expander below this section.')
         
-
-
 if st.session_state.show_container:
     with st.container(border = False):
         #col1, col2 = st.columns([3, 8])
