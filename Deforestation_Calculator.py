@@ -45,6 +45,7 @@ if 'forest_loss' not in st.session_state:
     st.session_state.longitude_input = -8.49000
     st.session_state.end_timeframe = dt.datetime(2024, 1, 1)
     st.session_state.start_timeframe = dt.datetime(2021, 1, 1)
+    st.session_state.total_deforestation_ha = 0
     
     st.session_state.expander_open = False
     st.session_state.info_intro = ' '
@@ -54,25 +55,42 @@ if 'forest_loss' not in st.session_state:
     st.session_state.zoom = 1
     st.session_state.input_spinner_placeholder = None
     
-    
     # st.session_state.forest_color = '#0C8346'
     # st.session_state.deforestation_color = '#FF4C4B'
 
-filler_col, animation_col, intro_col, info_col = st.columns([2, 5, 23, 5])
-with animation_col:
-        st.lottie("https://lottie.host/9bc48342-5206-4456-8ea4-cce828f5fe15/fQVJJlzp4j.json", height = 180)
+col1, col2, col3 = st.columns([2, 12, 2])
+with col1:
+        st.lottie("https://lottie.host/9bc48342-5206-4456-8ea4-cce828f5fe15/fQVJJlzp4j.json", height = 200)
     
-with intro_col:
-    st.markdown("<h1 style='text-align: left; font-family: FreeMono, monospace;font-size: 75px; color: #FFFFFF;'>TreeTracker AI</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: left; alphafont-size: 16px; opacity: 0.5; color: #FFFFFF;'>Track forest area change of an area using real-time satellite data by inputting coordinates on the left or choosing an example on the right.</h1>", unsafe_allow_html=True)
+with col2:
+    st.markdown("<h1 style='text-align: center; font-family: FreeMono, monospace;font-size: 100px; color: #FFFFFF;'>ForestVision AI</h1>", unsafe_allow_html=True)
+    import streamlit as st
+
+    # Add custom CSS for the horizontal line
+    st.markdown("""
+        <style>
+        .custom-divider {
+            border-top: 1.5px solid #994636; /* Change the color code to your desired color */
+            margin: 0px 0; /* Adjust the spacing around the line if needed */
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+    # Use the custom class in a markdown divider
+    st.markdown('<hr class="custom-divider">', unsafe_allow_html=True)
+
+    st.markdown("<p style='text-align: center; alphafont-size: 16px; opacity: 0.5; color: #FFFFFF;'>Track forest area change of an area using real-time satellite data by inputting coordinates on the left or choosing an example on the right.</h1>", unsafe_allow_html=True)
+    
+with col3:
+        st.lottie("https://lottie.host/9bc48342-5206-4456-8ea4-cce828f5fe15/fQVJJlzp4j.json", height = 200)
 
 col1, col2,col3 = st.columns([6, 5, 3])
 with col2:
     st.session_state.input_spinner_placeholder = st.empty()
-input_col1, map_col, example_col = st.columns([5, 20, 4])
+input_col1, map_col, example_col = st.columns([4, 20, 4])
 with input_col1:    
     st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 15px;'><b>Inputs</b></p>", unsafe_allow_html=True)            
-    with st.container(border=True):
+    with st.container(border=True, height = 470):
 
         st.session_state.latitude_input = st.text_input('Latitude', '-8.49000', 
                                                         help = "Enter the longitude coordinates of your desired area of interest. Press enter to view on map.")
@@ -113,9 +131,9 @@ with input_col1:
                     st.session_state.longitude_input = st.session_state.longitude_input
                     st.session_state.zoom = 12.5
 
-        everything_api = "http://localhost:8080/do_everything_self"
-        #everything_api = "https://south-american-forest-llzimbumzq-oe.a.run.app/do_everything_self"
-        if st.button("**Calculate deforestation**", use_container_width=True, type='primary', help= 'Click me to calculate deforestation.'):   
+        #everything_api = "http://localhost:8080/do_everything_self"
+        everything_api = "https://south-american-forest-llzimbumzq-oe.a.run.app/do_everything_self"
+        if st.button("**Calculate forest loss**", use_container_width=True, type='primary', help= 'Click me to calculate deforestation.'):   
             try:
                 with st.session_state.input_spinner_placeholder, st.spinner('Beep boop, contacting satellite :satellite_antenna:'):
                     response = requests.get(url=everything_api, params=params, timeout=60)
@@ -134,7 +152,7 @@ with input_col1:
                     st.session_state.start_sat = start_sat_image_array
                 
                     #start vector
-                    start_mask_vector = smooth_and_vectorize(start_mask_image_array, 9, '#00B272', 1) #color of initial forest
+                    start_mask_vector = smooth_and_vectorize(start_mask_image_array, 9, '#00B272', 0.5) #color of initial forest
                     start_mask_vector = start_mask_vector.convert('RGBA')
                     st.session_state.start_vector_overlay = start_mask_vector
                     
@@ -147,9 +165,6 @@ with input_col1:
                     start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
                     st.session_state.start_forest_cover_percent = start_forest_cover_percent
                     st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
-                    
-                    start_forest_cover_ha = ((start_forest_cover_percent/100)*26214400)/10000
-                    st.session_state.start_forest_cover_ha = start_forest_cover_ha
                     
                     #End Mask
                     end_mask_image_list = response.json().get("end_mask_image_list")
@@ -164,7 +179,7 @@ with input_col1:
                     st.session_state.end_sat = end_sat_image_array
                     
                     #End vector
-                    end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#0C8346', 1) #colour of remaining forest
+                    end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#00B272', 0.5) #colour of remaining forest
                     end_mask_vector = end_mask_vector.convert('RGBA')
                     st.session_state.end_vector_overlay = end_mask_vector
                     
@@ -178,9 +193,7 @@ with input_col1:
                     st.session_state.end_forest_cover_percent = end_forest_cover_percent
                     st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
                     
-                    end_forest_cover_ha = ((end_forest_cover_percent/100)* 26214400)/10000
-                    st.session_state.end_forest_cover_ha = end_forest_cover_ha
-                    
+            
                     # image info
                     start_info = response.json().get("start_date_info")
                     end_info = response.json().get("end_date_info")
@@ -190,7 +203,7 @@ with input_col1:
                     
                     #Calculated overlay
                     total_overlay_calculated_array  = start_mask_image_array - end_mask_image_array 
-                    total_overlay_calculated_array = smooth_and_vectorize(total_overlay_calculated_array, 9, '#FF4C4B', 1) #color of deforested forest
+                    total_overlay_calculated_array = smooth_and_vectorize(total_overlay_calculated_array, 9, '#994636', 0.5) #color of deforested forest
                     total_overlay_calculated = total_overlay_calculated_array.convert('RGBA')
                     total_calculated_overlay = Image.alpha_composite(end_overlay, total_overlay_calculated)
                     st.session_state.total_calculated_overlay = total_calculated_overlay
@@ -200,12 +213,70 @@ with input_col1:
                     st.session_state.total_overlay = total_overlay
                     
                     #Total metrics
-                    total_deforestation = round(((end_forest_cover_percent/start_forest_cover_percent)*100),1)
+                    total_deforestation = round((100 - (end_forest_cover_percent/start_forest_cover_percent)*100),1)
                     st.session_state.total_deforestation = total_deforestation
                     
                     st.session_state.expander_open = True
-                    st.session_state.show_expander = True
+                    st.session_state.show_container = True
                     st.session_state.zoom = 12.5
+                    
+                    #Metrics
+                    ## Start metrics
+                    # Forest cover and forest loss in percent
+                    start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
+                    st.session_state.start_forest_cover_percent = start_forest_cover_percent
+                    st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
+
+                    # Forest cover in hectares
+                    start_forest_cover_ha = (start_forest_cover_percent/100)*2621.44
+                    st.session_state.start_forest_cover_ha = start_forest_cover_ha
+
+                    # Annual CO2 absorption in tons
+                    start_annual_co2 = start_forest_cover_ha*11
+                    st.session_state.start_annual_co2 = start_annual_co2
+
+                    ## End metrics
+                    # Forest cover and forest loss in percent
+                    end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array != 0) / end_mask_image_array.size) * 100), 1)
+                    st.session_state.end_forest_cover_percent = end_forest_cover_percent
+                    st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
+
+                    # Forest cover in hectares
+                    end_forest_cover_ha = (end_forest_cover_percent/100)* 2621.44
+                    st.session_state.end_forest_cover_ha = end_forest_cover_ha
+
+                    # Annual CO2 absorption in tons
+                    end_annual_co2 = end_forest_cover_ha*11
+                    st.session_state.end_annual_co2 = end_annual_co2
+
+                    ## Total metrics
+                    # Forest loss in percent
+                    total_deforestation = round((100-(end_forest_cover_percent/start_forest_cover_percent)*100),1)
+                    st.session_state.total_deforestation = total_deforestation
+
+                    # Forest loss in hectares
+                    total_deforestation_ha = round((start_forest_cover_ha - end_forest_cover_ha), 1)
+                    st.session_state.total_deforestation_ha = total_deforestation_ha
+
+                    # Equivalent of hectare loss in terms of Le Wagon loft space (187 m²)
+                    loft_loss = total_deforestation_ha*10000/187
+                    st.session_state.loft_loss = loft_loss
+
+                    # Environmental impact (CO2 loss), assumption: 11 tons per hectare
+                    annual_co2_loss = start_annual_co2 - end_annual_co2
+                    st.session_state.annual_co2_loss = annual_co2_loss
+
+                    # Equivalent of CO2 loss in terms of annual per capita CO2 emission, assumption: 5 tons per capita
+                    human_co2_cons_equ = annual_co2_loss/5
+                    st.session_state.human_co2_cons_equ = human_co2_cons_equ
+
+                    # Equivalent of CO2 loss in kg of beef, assumption: 0.1 tons per kg
+                    beef_equ = annual_co2_loss/0.1
+                    st.session_state.beef_equ = beef_equ
+                    
+                    
+                    
+                    
             except (requests.RequestException, ValueError) as e:
                 st.markdown('No suitable image found near your start date. Please try another.')
                     
@@ -423,7 +494,7 @@ with example_col:
                 st.session_state.total_overlay = total_overlay
                 
                 #Total metrics
-                total_deforestation = round(((end_forest_cover_percent/start_forest_cover_percent)*100),1)
+                total_deforestation = round((100 - (end_forest_cover_percent/start_forest_cover_percent)*100),1)
                 st.session_state.total_deforestation = total_deforestation   
                 
                 st.session_state.zoom = 12.5
@@ -484,98 +555,109 @@ with map_col:
         layers=[polygon_layer],
         tooltip=False
     ))
+    
+st.markdown(' ')
+col1, col2, col3 = st.columns([11, 3, 11])
+with col1:
+    st.markdown('---')
+with col2:
+    st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 30px;'><b>Output</b></p>", unsafe_allow_html=True)
+with col3:
+    st.markdown('---')
+    
+if 'show_container' not in st.session_state:
+    st.session_state.show_container = False
 
-
-
-if 'show_expander' not in st.session_state:
-    st.session_state.show_expander = False
-
-if st.session_state.show_expander:
-    with st.expander(label='Output', expanded=st.session_state.expander_open):
-        st.markdown(f'{st.session_state.info_intro} {st.session_state.start_info} and {st.session_state.end_info}')
+if st.session_state.show_container:
+    with st.container(border = True):
+            #st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 22px;'><b>Summary</b></p>", unsafe_allow_html=True)
+            st.markdown(f'**Summary:** {st.session_state.info_intro} {st.session_state.start_info} and {st.session_state.end_info}. If you would like to dive deeper, with more time intervals, see the expander below this section.')
         
-        sat_col, forest_col, filler, overlay_col, metrics_col = st.columns([2, 2, 1, 6, 5])
+if st.session_state.show_container:
+    with st.container(border = False):
+        #col1, col2 = st.columns([3, 8])
+        #st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 22px;'><b>Output</b></p>", unsafe_allow_html=True)
+        sat_col, forest_col, overlay_col, metrics_col = st.columns([3.2, 3.2, 7, 6])
 
         with sat_col:
-            st.markdown("##### Start date")
-            st.image(st.session_state.start_sat, caption= "Satellite Image")
+        #with st.container(border = True, height = 620):
+            st.markdown("<p style='text-align: left; font-family: FreeMono, monospace; font-size: 18px;'><b>Start date</b></p>", unsafe_allow_html=True)
+            st.image(st.session_state.start_sat, use_column_width=True, caption='Satellite image')
 
-            st.markdown("##### End date")
-            st.image(st.session_state.end_sat, caption= "Satellite Image")
-
+            st.markdown("<p style='text-align: left; font-family: FreeMono, monospace; font-size: 18px;'><b>End date</b></p>", unsafe_allow_html=True)
+            st.image(st.session_state.end_sat, use_column_width=True, caption='Satellite image')
+                
+            
+                
         with forest_col:
-            st.markdown('<p style="color: #0F1116; ">filler</p>', unsafe_allow_html=True)
-            st.image(st.session_state.start_overlay, caption= "Forest Area")
+        #with st.container(border = True, height = 620):
+            st.markdown("<p style='text-align: left; font-family: FreeMono, monospace; color: #0E1117; font-size: 18px;'><b>Start date</b></p>", unsafe_allow_html=True)
+            st.image(st.session_state.start_overlay, use_column_width=True, caption='Predicted forest area')
 
-            st.markdown('<p style="color: #0F1116; ">filler</p>', unsafe_allow_html=True)
-            st.image(st.session_state.end_overlay, caption= "Forest Area")
-
+            st.markdown("<p style='text-align: left; font-family: FreeMono, monospace; color: #0E1117; font-size: 18px;'><b>End date</b></p>", unsafe_allow_html=True)
+            st.image(st.session_state.end_overlay, use_column_width=True, caption='Predicted forest area' )
+                
         with overlay_col:
-            st.markdown('#### Total Forest Change')
-            st.image(st.session_state.total_calculated_overlay)
-            st.markdown('🟩 Remaining forest 🟥 Deforestation ')
-                    
-            buffer = io.BytesIO()
-            st.session_state.total_calculated_overlay.save(buffer, format="PNG")
-            buffer.seek(0)
+            with st.container(border=True, height = 620):
+                st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 22px;'><b>Total Forest Change</b></p>", unsafe_allow_html=True)
+                st.image(st.session_state.total_calculated_overlay)
+                st.markdown('🟩 Remaining forest 🟥 Deforestation ')
+                
+    
+        #         st.session_state.total_calculated_overlay.save(buffer, format="PNG")
+        #         buffer.seek(0)
+        #         st.download_button(
+        #         label="Download image 💾 ",
+        #         data=buffer,
+        #         file_name=f"deforestatation{st.session_state.start_info}/{st.session_state.end_info}.png",
+        #         mime="image/png"
+        # )
             
-            # forest_color = st.color_picker('Pick the colour of the forest overlay')
-            # deforestation_color = st.color_picker('Pick the colour of the deforestation overlay ')
-            
-        
         with metrics_col:
-            st.markdown('#### Metrics')
+            with st.container(border=True, height = 620):
+                st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 22px;'><b>Metrics</b></p>", unsafe_allow_html=True)
 
-            forest_loss_percent_tab, forest_loss_ha_tab, tab3, tab4 = st.tabs(['Forest Loss (%)', 'Forest Loss (ha)', 'Enviromental Impact', 'EUDR Classification'])
-            with forest_loss_percent_tab:
-                st.markdown('##### Start date forest area')
-                st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #00B272; border-radius: 10px; width: {st.session_state.start_forest_cover_percent_int}%; height: 50px; padding: 5px">'
-                            f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.start_forest_cover_percent:.1f}%</p>'
-                            '</div>', unsafe_allow_html=True)
-                st.markdown(' ')
+                forest_loss_percent_tab, forest_loss_ha_tab, tab3, tab4 = st.tabs(['Forest Loss (%)', 'Forest Loss (ha)', 'Enviromental Impact', 'EUDR Classification'])
+                with forest_loss_percent_tab:
+                    st.markdown('Start date forest cover')
+                    st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #262730; border-radius: 10px; width: {st.session_state.start_forest_cover_percent_int}%; height: 50px; padding: 5px">'
+                                f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.start_forest_cover_percent:.0f}%</p>'
+                                '</div>', unsafe_allow_html=True)
+                    st.markdown(' ')
 
-                st.markdown('##### End date forest area')
+                    st.markdown('End date forest cover')
 
-                st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #994636; border-radius: 10px; width: {st.session_state.end_forest_cover_percent_int}%; height: 50px; padding: 5px">'
-                            f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.end_forest_cover_percent:.1f}%</p>'
-                            '</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #262730; border-radius: 10px; width: {st.session_state.end_forest_cover_percent_int}%; height: 50px; padding: 5px">'
+                                f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.end_forest_cover_percent:.0f}%</p>'
+                                '</div>', unsafe_allow_html=True)
 
-                st.markdown("###")
-                st.markdown(
-                        '<h3 style="color: white; font-size: 24px;">Total deforestation change</h3>'
-                        '</div>', unsafe_allow_html=True)
-
-                st.markdown('<div style="display: flex; justify-content: center; align-items: center; background-color: #262630; border-radius: 10px; height: 100px; padding: 5px"; border>'
-                        f'<p style="color: white; font-size: 50px; font-weight: bold; margin: 0;">- {st.session_state.total_deforestation}%</p>'
-                        '</div>', unsafe_allow_html=True)
-                
-                st.markdown(' ')
-                st.download_button(
-                label="Download image 💾 ",
-                data=buffer,
-                file_name=f"deforestatation{st.session_state.start_info}/{st.session_state.end_info}.png",
-                mime="image/png"
-        )
-                
-            with forest_loss_ha_tab:
-                st.markdown('##### Start date forest area (thousand hectares)')
-                st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #994636; border-radius: 10px; width: {st.session_state.start_forest_cover_percent_int}%; height: 50px; padding: 5px">'
-                            f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.start_forest_cover_ha:.0f}</p>'
-                            '</div>', unsafe_allow_html=True)
-                st.markdown(' ')
-
-                st.markdown('##### End date forest area (thousand hectares)')
-
-                st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #994636; border-radius: 10px; width: {st.session_state.end_forest_cover_percent_int}%; height: 50px; padding: 5px">'
-                            f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.end_forest_cover_ha:.0f}</p>'
+                    st.markdown("###")
+                    st.markdown(
+                            '<h3 style="color: white; font-size: 24px;">Total change in forest area</h3>'
                             '</div>', unsafe_allow_html=True)
 
-                st.markdown("###")
-                st.markdown(
-                        '<h3 style="color: white; font-size: 24px;">Total deforestation</h3>'
-                        '</div>', unsafe_allow_html=True)
+                    st.markdown('<div style="display: flex; justify-content: center; align-items: center; background-color: #994636; border-radius: 10px; height: 150px; padding: 5px"; border>'
+                            f'<p style="color: white; font-size: 80px; font-weight: bold; margin: 0;">- {st.session_state.total_deforestation:.0f}%</p>'
+                            '</div>', unsafe_allow_html=True)
+             
+                with forest_loss_ha_tab:
+                    st.markdown('Start date forest area (hectares)')
+                    st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #00B272; border-radius: 10px; width: {st.session_state.start_forest_cover_percent_int}%; height: 50px; padding: 5px">'
+                                f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.start_forest_cover_ha:.1f} ha</p>'
+                                '</div>', unsafe_allow_html=True)
+                    st.markdown(' ')
 
-                st.markdown('<div style="display: flex; justify-content: center; align-items: center; background-color: #262630; border-radius: 10px; height: 100px; padding: 5px"; border>'
-                        f'<p style="color: white; font-size: 50px; font-weight: bold; margin: 0;">-{st.session_state.total_deforestation:.0f}k hectares</p>'
-                        '</div>', unsafe_allow_html=True)
-                
+                    st.markdown('End date forest area (hectares)')
+
+                    st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #994636; border-radius: 10px; width: {st.session_state.end_forest_cover_percent_int}%; height: 50px; padding: 5px">'
+                                f'<p style="color: white; font-size: 24px; font-weight: bold; margin: 0; width: 80%;">{st.session_state.end_forest_cover_ha:.1f} ha</p>'
+                                '</div>', unsafe_allow_html=True)
+
+                    st.markdown("###")
+                    st.markdown(
+                            '<h3 style="color: white; font-size: 24px;">Total change in forest area</h3>'
+                            '</div>', unsafe_allow_html=True)
+
+                    st.markdown('<div style="display: flex; justify-content: center; align-items: center; background-color: #262630; border-radius: 10px; height: 150px; padding: 5px"; border>'
+                            f'<p style="color: white; font-size: 80px; font-weight: bold; margin: 0;">- {st.session_state.total_deforestation_ha} ha</p>'
+                            '</div>', unsafe_allow_html=True)
