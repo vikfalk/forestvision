@@ -8,10 +8,6 @@ from deforestation_tracker.custom_layer import RepeatElements
 from deforestation_tracker.segmenter import segment, segment_self
 from deforestation_tracker.image_array_loaders import load_img_array_from_satellite, load_multiple_imgs_from_sat
 
-# INSTRUCTION:
-# Run this file, triggering the __main__ function.
-# Go to "http://localhost:8080/docs" to test it out.
-
 app = FastAPI()
 
 @app.get('/')
@@ -31,7 +27,7 @@ def get_image_from_satellite_with_params(
     image_array, request_info_date = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
-        end_timeframe=str(end_timeframe),  # assuming format "2023-02-03"
+        end_timeframe=str(end_timeframe),
     )
 
     original_image_list = image_array.flatten().tolist()
@@ -44,12 +40,11 @@ def get_image_from_satellite_with_params(
 
 @app.get("/do_everything")
 def do_everything(
-    start_timeframe: str,  # TODO: Pay attention to unused inputs.
+    start_timeframe: str,
     end_timeframe: str,
     longitude: str,
-    latitude: str,
-    sample_number: str,  # TODO: Pay attention to unused inputs.
-    square_size: str):  # TODO: Pay attention to unused inputs.
+    latitude: str
+    ):
 
     model = load_model('./deforestation_tracker/model_ressources/unet-attention-3d.hdf5')
 
@@ -57,13 +52,13 @@ def do_everything(
     end_sat_image_array, end_date_info = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
-        end_timeframe=str(end_timeframe)  # assuming format "2023-02-03"
+        end_timeframe=str(end_timeframe)
     )
 
     start_sat_image_array, start_date_info = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
-        end_timeframe=str(start_timeframe)  # assuming format "2023-02-03"
+        end_timeframe=str(start_timeframe)
     )
 
     #End sat present
@@ -88,8 +83,7 @@ def do_everything(
                                  'end_date_info': end_date_info,
                                  })
 
-# Selfmade model endpoints
-
+# Selfmade Model Endpoints
 @app.get("/get_image_from_satellite_self")
 def get_image_from_satellite_self():
     model = load_model('./deforestation_tracker/model_ressources/att_unet_4b.hdf5', custom_objects={'RepeatElements': RepeatElements})
@@ -119,12 +113,10 @@ def get_image_from_satellite_self():
 
 @app.get("/get_image_from_satellite_with_params_self")
 def get_image_from_satellite_with_params_self(
-    start_timeframe: str,  # TODO: Pay attention to unused inputs.
     end_timeframe: str,
     longitude: str,
-    latitude: str,
-    sample_number: str,  # TODO: Pay attention to unused inputs.
-    square_size: str):  # TODO: Pay attention to unused inputs.
+    latitude: str
+    ):
     image_list = float(latitude), float(longitude), end_timeframe
     model = load_model('./deforestation_tracker/model_ressources/att_unet_4b.hdf5', custom_objects={'RepeatElements': RepeatElements})
 
@@ -132,13 +124,13 @@ def get_image_from_satellite_with_params_self(
     original_image_array, request_info_date = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
-        end_timeframe=str(end_timeframe),  # assuming format "2023-02-03"
+        end_timeframe=str(end_timeframe),
         request_type='TrueColor'
     )
     four_b_array, date = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
-        end_timeframe=str(end_timeframe),  # assuming format "2023-02-03"
+        end_timeframe=str(end_timeframe),
         request_type='4-band'
     )
 
@@ -164,12 +156,10 @@ def get_image_from_satellite_with_params_self(
 
 @app.get("/do_everything_self")
 def do_everything_self(
-    start_timeframe: str,  # TODO: Pay attention to unused inputs.
+    start_timeframe: str,
     end_timeframe: str,
     longitude: str,
-    latitude: str,
-    sample_number: str,  # TODO: Pay attention to unused inputs.
-    square_size: str):  # TODO: Pay attention to unused inputs.
+    latitude: str):
 
     model = load_model('./deforestation_tracker/model_ressources/att_unet_4b.hdf5', custom_objects={'RepeatElements': RepeatElements})
 
@@ -177,7 +167,7 @@ def do_everything_self(
     end_sat_image_array, end_date_info = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
-        end_timeframe=str(end_timeframe),  # assuming format "2023-02-03"
+        end_timeframe=str(end_timeframe),
         request_type='TrueColor'
     )
 
@@ -185,7 +175,7 @@ def do_everything_self(
     start_sat_image_array, start_date_info = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
-        end_timeframe=str(start_timeframe),  # assuming format "2023-02-03"
+        end_timeframe=str(start_timeframe),
         request_type='TrueColor'
     )
 
@@ -193,7 +183,7 @@ def do_everything_self(
     four_b_array_end, date = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
-        end_timeframe=str(end_timeframe),  # assuming format "2023-02-03"
+        end_timeframe=str(end_timeframe),
         request_type='4-band'
     )
 
@@ -201,7 +191,7 @@ def do_everything_self(
     four_b_array_start, date = load_img_array_from_satellite(
         lat_deg=float(latitude),
         lon_deg=float(longitude),
-        end_timeframe=str(start_timeframe),  # assuming format "2023-02-03"
+        end_timeframe=str(start_timeframe),
         request_type='4-band'
     )
 
