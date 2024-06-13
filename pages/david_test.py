@@ -55,11 +55,7 @@ params = {
 }
 
 # REQUEST
-
-# cloud_base_url = "https://defotra-llzimbumzq-oe.a.run.app"
-# cloud_base_url = "https://tree-tracker-llzimbumzq-oe.a.run.app"
-# cloud_base_url = "https://tree-tracker-llzimbumzq-oe.a.run.app"
-# cloud_base_url = "https://tree-tracker-two-llzimbumzq-oe.a.run.app"
+# cloud_base_url = "https://forestvision-llzimbumzq-oe.a.run.app"
 local_base_url = "http://localhost:8080"
 response = requests.get(url=f"{local_base_url}/get_multiple_images_from_satellite",
                         params=params,
@@ -116,11 +112,11 @@ with st.container(border=False):
         col_a, col_b = st.columns(2)
         with col_a.container(border=False):
                 st.markdown(f"<p style='text-align: center; font-family: FreeMono, monospace; font-size: 15px;'><b>Coverage Lost Since Start</b></p>", unsafe_allow_html=True)
-                st.bar_chart(df_perc_cumu, x="Dates", y="Coverage Loss in %")
+                st.bar_chart(df_perc_cumu, x="Dates", y="Coverage Loss in %", color="#994636")
 
         with col_b.container(border=False):
                 st.markdown(f"<p style='text-align: center; font-family: FreeMono, monospace; font-size: 15px;'><b>Monthly Loss Rate</b></p>", unsafe_allow_html=True)
-                st.bar_chart(df_ha_monthly, x="Dates", y="Monthy Loss in Hectar")
+                st.bar_chart(df_ha_monthly, x="Dates", y="Monthy Loss in Hectar", color="#994636")
 
 # DATA SUPPLY
 renamed_df = (df
