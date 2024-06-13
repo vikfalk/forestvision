@@ -1,8 +1,7 @@
-#Image-Aquisition
 sentinelhub
 fastapi==0.111.0
 numpy==1.26.4
 Pillow==10.3.0
-tensorflow_macos==2.16.1; sys_platform == 'darwin'  # if OS is macOS
+tensorflow_macos==2.16.1; sys_platform == 'darwin'
 tensorflow==2.16.1; sys_platform != 'darwin'
 keras==3.2.1

@@ -1,49 +1,33 @@
-### AL ###
-#Template for AL projects for Dynamics 365 Business Central
-#launch.json folder
-.vscode/
-#Cache folder
-.alcache/
-#Symbols folder
-.alpackages/
-#Snapshots folder
-.snapshots/
-#Testing Output folder
-.output/
-#Extension App-file
-*.app
-#Rapid Application Development File
-rad.json
-#Translation Base-file
-*.g.xlf
-#License-file
-*.flf
-#Test results file
-TestResults.xml
-# Notebook
 # Local Notebooks
 davids_backend_nb.ipynb
 victors_model.ipynb
+
 # temporary files of macOS
 .DS_Store
+
 # sentinel image notebooks
 Fetch_Sentinel_Image.ipynb
 .ipynb_checkpoints
-#env file
+
+# environmental variables
 .env
 .envrc
 env.yaml
+
 # data
 segmented_output_files/
 raw_data/
-#Viktor extra code
+
+# Viktor extra code
 viktor_code.py
+
 # Python version
 .python-version
-<<<<<<< HEAD
+
 # Pycache
 __pycache__/
-=======
+
 # testing.py to run some checks
 testing.py
->>>>>>> 4a1ce04ecc895cacc53bd3436556328db24449a4
+install.txt
+Notes.md
