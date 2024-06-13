@@ -1,7 +1,7 @@
 from setuptools import setup
 from setuptools import find_packages
 
-with open('requirements.txt') as f:
+with open('requirements.txt', encoding='utf-8') as f:
     content = f.readlines()
 requirements = [x.strip() for x in content]
 

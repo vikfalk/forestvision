@@ -1,8 +1,8 @@
-from deforestation_tracker.sentinelhub_requester import search_available_L2A_tiles, request_image, sentinelhub_authorization, box_from_point, sentinel_build_request
-from deforestation_tracker.utils import path_constructor, timeframe_constructor
-from PIL import Image
 import numpy as np
+from PIL import Image
 from sentinelhub import SentinelHubDownloadClient
+from deforestation_tracker.utils import path_constructor
+from deforestation_tracker.sentinelhub_requester import search_available_L2A_tiles, request_image, sentinelhub_authorization, box_from_point, sentinel_build_request
 
 
 def load_img_array_from_satellite(

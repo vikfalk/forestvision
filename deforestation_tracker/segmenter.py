@@ -1,5 +1,5 @@
-from PIL import Image
 import numpy as np
+from PIL import Image
 
 def segment(img_array: np.array, model) -> np.array:
     """Takes a scaled image array, predicts its rainforest segmentation, converts it

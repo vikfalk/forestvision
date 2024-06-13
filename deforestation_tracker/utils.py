@@ -1,7 +1,7 @@
+import re
+import numpy as np
 from PIL import Image
 import datetime as dt
-import numpy as np
-import re
 
 def timeframe_constructor(datetime_string="2021-01-01", temporal_padding=14):
     """Takes the '2021-01-01' string from the UI and returns a
