@@ -5,3 +5,4 @@ Pillow==10.3.0
 tensorflow_macos==2.16.1; sys_platform == 'darwin'
 tensorflow==2.16.1; sys_platform != 'darwin'
 keras==3.2.1
+uvicorn==0.30.1
