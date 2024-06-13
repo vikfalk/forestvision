@@ -274,7 +274,6 @@ def get_multiple_images_from_satellite(
 
     return JSONResponse(content = {
         "date_list_loaded": date_list_loaded,
-        "original_img_list": original_img_list,
         "segmented_img_list": segmented_img_list})
 
 if __name__ == "__main__":
