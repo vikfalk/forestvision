@@ -6,88 +6,242 @@ import requests
 import numpy as np
 from processing.frontend_processing import smooth_and_vectorize
 import streamlit_lottie
+import base64
 import io
 import pandas as pd
 
+def base64_to_numpy(img_b64):
+    img_bytes = io.BytesIO(base64.b64decode(img_b64))
+    img_array = np.load(img_bytes)
+    return img_array
+
+# def process_forest_loss_calculation(latitude, longitude, start_date, end_date):
+#     # Parameters for API request
+#     params = {
+#         'start_timeframe': start_date,
+#         'end_timeframe': end_date,
+#         'longitude': longitude,
+#         'latitude': latitude,
+#         'sample_number': 1,
+#         'square_size': 5.12
+#     }
+
+#     try:
+#         # API request to get response
+#         with st.session_state.input_spinner_placeholder, st.spinner('Requesting satellite images from Sentinel-2 L2A API...'):
+#             response = requests.get(url=everything_api, params=params, timeout=60)
+
+#         # Process start images
+#         with st.session_state.input_spinner_placeholder, st.spinner('Processing images and calculating metrics...'):
+#             # Start Mask
+#             start_mask_image_list = response.json().get("start_mask_image_list")
+#             start_mask_image_array = np.array(start_mask_image_list, dtype=np.uint8)
+#             start_mask_image = Image.fromarray(start_mask_image_array)
+#             st.session_state.start_mask = start_mask_image_array
+
+#             # Start Sat
+#             start_sat_image_list = response.json().get("start_sat_image_list")
+#             start_sat_image_array = np.array(start_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+#             start_sat_image = Image.fromarray((start_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
+#             st.session_state.start_sat = start_sat_image_array
+
+#             # Start vector
+#             start_mask_vector = smooth_and_vectorize(start_mask_image_array, 9, '#00B272', 0.5)  # color of initial forest
+#             start_mask_vector = start_mask_vector.convert('RGBA')
+#             st.session_state.start_vector_overlay = start_mask_vector
+
+#             # Start overlay
+#             start_overlay = Image.alpha_composite(start_sat_image, start_mask_vector)
+#             st.session_state.start_overlay = start_overlay
+
+#             # Start metrics
+#             start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
+#             st.session_state.start_forest_cover_percent = start_forest_cover_percent
+#             st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
+
+#             # End Mask
+#             end_mask_image_list = response.json().get("end_mask_image_list")
+#             end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
+#             end_mask_image = Image.fromarray(end_mask_image_array)
+#             st.session_state.end_mask = end_mask_image_array
+
+#             # End Sat
+#             end_sat_image_list = response.json().get("end_sat_image_list")
+#             end_sat_image_array = np.array(end_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
+#             end_sat_image = Image.fromarray((end_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
+#             st.session_state.end_sat = end_sat_image_array
+
+#             # End vector
+#             end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#00B272', 0.5)  # colour of remaining forest
+#             end_mask_vector = end_mask_vector.convert('RGBA')
+#             st.session_state.end_vector_overlay = end_mask_vector
+
+#             # End overlay
+#             end_overlay = Image.alpha_composite(end_sat_image, end_mask_vector)
+#             st.session_state.end_overlay = end_overlay
+
+#             # End metrics
+#             end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array != 0) / end_mask_image_array.size) * 100), 1)
+#             st.session_state.end_forest_cover_percent = end_forest_cover_percent
+#             st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
+
+#             # Image info
+#             start_info = response.json().get("start_date_info")
+#             end_info = response.json().get("end_date_info")
+#             st.session_state.info_intro = f'The closest cloud-free images to your desired start and end dates are from:'
+#             st.session_state.start_info = start_info
+#             st.session_state.end_info = end_info
+
+#             # Calculated overlay
+#             total_overlay_calculated_array = start_mask_image_array - end_mask_image_array
+#             total_overlay_calculated_array = smooth_and_vectorize(total_overlay_calculated_array, 9, '#994636', 0.5)  # color of deforested forest
+#             total_overlay_calculated = total_overlay_calculated_array.convert('RGBA')
+#             total_calculated_overlay = Image.alpha_composite(end_overlay, total_overlay_calculated)
+#             st.session_state.total_calculated_overlay = total_calculated_overlay
+
+#             # Total metrics
+#             total_deforestation = round((100 - (end_forest_cover_percent / start_forest_cover_percent) * 100), 1)
+#             st.session_state.total_deforestation = total_deforestation
+
+#             # Start metrics
+#             # Forest cover and forest loss in percent
+#             start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
+#             st.session_state.start_forest_cover_percent = start_forest_cover_percent
+#             st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
+
+#             # Forest cover in hectares
+#             start_forest_cover_ha = (start_forest_cover_percent / 100) * 2621.44
+#             st.session_state.start_forest_cover_ha = start_forest_cover_ha
+
+#             # Annual CO2 absorption in tons
+#             start_annual_co2 = start_forest_cover_ha * 11
+#             st.session_state.start_annual_co2 = start_annual_co2
+
+#             # End metrics
+#             # Forest cover and forest loss in percent
+#             end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array != 0) / end_mask_image_array.size) * 100), 1)
+#             st.session_state.end_forest_cover_percent = end_forest_cover_percent
+#             st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
+
+#             # Forest cover in hectares
+#             end_forest_cover_ha = (end_forest_cover_percent / 100) * 2621.44
+#             st.session_state.end_forest_cover_ha = end_forest_cover_ha
+
+#             # Annual CO2 absorption in tons
+#             end_annual_co2 = end_forest_cover_ha * 11
+#             st.session_state.end_annual_co2 = end_annual_co2
+
+#             # Total metrics
+#             # Forest loss in hectares
+#             total_deforestation_ha = round((start_forest_cover_ha - end_forest_cover_ha), 1)
+#             st.session_state.total_deforestation_ha = total_deforestation_ha
+
+#             # Equivalent of hectare loss in terms of Le Wagon loft space (187 m²)
+#             loft_loss = total_deforestation_ha * 10000 / 187
+#             st.session_state.loft_loss = loft_loss
+
+#             # Equivalent of hectare loss in terms of Berghains
+#             berg_loss = total_deforestation_ha * 10000 / 2838
+#             st.session_state.berg_loss = berg_loss
+
+#             # Environmental impact (CO2 loss), assumption: 11 tons per hectare
+#             annual_co2_loss = start_annual_co2 - end_annual_co2
+#             st.session_state.annual_co2_loss = annual_co2_loss
+
+#             # Equivalent of CO2 loss in terms of annual per capita CO2 emission, assumption: 5 tons per capita
+#             human_co2_cons_equ = annual_co2_loss / 4.7
+#             st.session_state.human_co2_cons_equ = human_co2_cons_equ
+
+#             # Equivalent of CO2 loss in kg of beef, assumption: 0.1 tons per kg
+
+#             beef_equ = annual_co2_loss / 0.1
+#             st.session_state.beef_equ = beef_equ
+
+#             # Set session states for UI updates
+#             st.session_state.expander_open = True
+#             st.session_state.output = True
+#             st.session_state.zoom = 12.5
+
+#     except (requests.RequestException, ValueError) as e:
+#         with st.session_state.input_spinner_placeholder:
+#             st.markdown('No suitable image found near your start date. Please try another.')
+
+
 def process_forest_loss_calculation(latitude, longitude, start_date, end_date):
-    # Parameters for API request
     params = {
         'start_timeframe': start_date,
         'end_timeframe': end_date,
         'longitude': longitude,
         'latitude': latitude,
-        'sample_number': 1,
-        'square_size': 5.12
+        'sample_number': 2,
+        'send_orginal_images': 'True'
     }
 
     try:
-        # API request to get response
         with st.session_state.input_spinner_placeholder, st.spinner('Requesting satellite images from Sentinel-2 L2A API...'):
-            response = requests.get(url=everything_api, params=params, timeout=60)
+            response = requests.get(
+                url="http://localhost:8080/get_satellite_images", # TODO: Change API_URL
+                params=params,
+                timeout=60)
 
         # Process start images
         with st.session_state.input_spinner_placeholder, st.spinner('Processing images and calculating metrics...'):
-            # Start Mask
-            start_mask_image_list = response.json().get("start_mask_image_list")
-            start_mask_image_array = np.array(start_mask_image_list, dtype=np.uint8)
-            start_mask_image = Image.fromarray(start_mask_image_array)
-            st.session_state.start_mask = start_mask_image_array
+            # Dates
+            date_list_loaded = response.json().get("date_list_loaded")
 
-            # Start Sat
-            start_sat_image_list = response.json().get("start_sat_image_list")
-            start_sat_image_array = np.array(start_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
-            start_sat_image = Image.fromarray((start_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
-            st.session_state.start_sat = start_sat_image_array
+            # Segmented Images
+            segmented_images_b64 = response.json().get("segmented_img_list")
+            segmented_image_arrays = [base64_to_numpy(img_b64) for img_b64 in segmented_images_b64]
+            segmented_images = [Image.fromarray(image) for image in segmented_image_arrays]
 
-            # Start vector
-            start_mask_vector = smooth_and_vectorize(start_mask_image_array, 9, '#00B272', 0.5)  # color of initial forest
-            start_mask_vector = start_mask_vector.convert('RGBA')
+            # Original Satellite Images
+            original_images_b64 = response.json().get("original_img_list")
+            original_image_arrays = [base64_to_numpy(img_b64) for img_b64 in original_images_b64]
+            original_images = [Image.fromarray(image).convert('RGBA') for image in original_image_arrays]
+
+            # Assign the session states and variables for first image
+            st.session_state.start_mask = segmented_image_arrays[0]
+            start_mask_image = segmented_images[0]
+
+            st.session_state.start_sat = original_image_arrays[0]
+            start_sat_image = original_images[0]
+
+            start_mask_vector = smooth_and_vectorize(segmented_image_arrays[0], 9, '#00B272', 0.5).convert('RGBA')
             st.session_state.start_vector_overlay = start_mask_vector
 
-            # Start overlay
             start_overlay = Image.alpha_composite(start_sat_image, start_mask_vector)
             st.session_state.start_overlay = start_overlay
 
-            # Start metrics
-            start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
+            start_forest_cover_percent = round(((np.count_nonzero(segmented_image_arrays[0] != 0) / segmented_image_arrays[0].size) * 100), 1)
             st.session_state.start_forest_cover_percent = start_forest_cover_percent
             st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
 
-            # End Mask
-            end_mask_image_list = response.json().get("end_mask_image_list")
-            end_mask_image_array = np.array(end_mask_image_list, dtype=np.uint8)
-            end_mask_image = Image.fromarray(end_mask_image_array)
-            st.session_state.end_mask = end_mask_image_array
+            # Assign the session states and variables for last image
+            st.session_state.end_mask = segmented_image_arrays[-1]
+            end_mask_image = segmented_images[-1]
 
-            # End Sat
-            end_sat_image_list = response.json().get("end_sat_image_list")
-            end_sat_image_array = np.array(end_sat_image_list, dtype=np.float32).reshape((512, 512, 3))
-            end_sat_image = Image.fromarray((end_sat_image_array * 255).astype(np.uint8)).convert('RGBA')
-            st.session_state.end_sat = end_sat_image_array
+            st.session_state.end_sat = original_image_arrays[-1]
+            end_sat_image = original_images[-1]
 
-            # End vector
-            end_mask_vector = smooth_and_vectorize(end_mask_image_array, 9, '#00B272', 0.5)  # colour of remaining forest
-            end_mask_vector = end_mask_vector.convert('RGBA')
+            end_mask_vector = smooth_and_vectorize(segmented_image_arrays[-1], 9, '#00B272', 0.5).convert('RGBA')
             st.session_state.end_vector_overlay = end_mask_vector
 
-            # End overlay
             end_overlay = Image.alpha_composite(end_sat_image, end_mask_vector)
             st.session_state.end_overlay = end_overlay
 
-            # End metrics
-            end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array != 0) / end_mask_image_array.size) * 100), 1)
+            end_forest_cover_percent = round(((np.count_nonzero(segmented_image_arrays[-1] != 0) / segmented_image_arrays[-1].size) * 100), 1)
             st.session_state.end_forest_cover_percent = end_forest_cover_percent
             st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
 
             # Image info
-            start_info = response.json().get("start_date_info")
-            end_info = response.json().get("end_date_info")
+            start_info = date_list_loaded[0]
+            end_info = date_list_loaded[-1]
             st.session_state.info_intro = f'The closest cloud-free images to your desired start and end dates are from:'
             st.session_state.start_info = start_info
             st.session_state.end_info = end_info
 
             # Calculated overlay
-            total_overlay_calculated_array = start_mask_image_array - end_mask_image_array
+            total_overlay_calculated_array = segmented_image_arrays[0] - segmented_image_arrays[-1]
             total_overlay_calculated_array = smooth_and_vectorize(total_overlay_calculated_array, 9, '#994636', 0.5)  # color of deforested forest
             total_overlay_calculated = total_overlay_calculated_array.convert('RGBA')
             total_calculated_overlay = Image.alpha_composite(end_overlay, total_overlay_calculated)
@@ -99,7 +253,7 @@ def process_forest_loss_calculation(latitude, longitude, start_date, end_date):
 
             # Start metrics
             # Forest cover and forest loss in percent
-            start_forest_cover_percent = round(((np.count_nonzero(start_mask_image_array != 0) / start_mask_image_array.size) * 100), 1)
+            start_forest_cover_percent = round(((np.count_nonzero(segmented_image_arrays[0] != 0) / segmented_image_arrays[0].size) * 100), 1)
             st.session_state.start_forest_cover_percent = start_forest_cover_percent
             st.session_state.start_forest_cover_percent_int = int(start_forest_cover_percent)
 
@@ -113,7 +267,7 @@ def process_forest_loss_calculation(latitude, longitude, start_date, end_date):
 
             # End metrics
             # Forest cover and forest loss in percent
-            end_forest_cover_percent = round(((np.count_nonzero(end_mask_image_array != 0) / end_mask_image_array.size) * 100), 1)
+            end_forest_cover_percent = round(((np.count_nonzero(segmented_image_arrays[-1] != 0) / segmented_image_arrays[-1].size) * 100), 1)
             st.session_state.end_forest_cover_percent = end_forest_cover_percent
             st.session_state.end_forest_cover_percent_int = int(end_forest_cover_percent)
 
@@ -154,10 +308,11 @@ def process_forest_loss_calculation(latitude, longitude, start_date, end_date):
             st.session_state.expander_open = True
             st.session_state.output = True
             st.session_state.zoom = 12.5
-        
-    except (requests.RequestException, ValueError) as e:
+
+    except (requests.RequestException, ValueError):
         with st.session_state.input_spinner_placeholder:
             st.markdown('No suitable image found near your start date. Please try another.')
+
 
 st.set_page_config(
     page_title="ForestVision",
@@ -175,7 +330,7 @@ if 'zoom' not in st.session_state:
     st.session_state.input_spinner_placeholder = None
 
 col1, title_col, col3 = st.columns([2, 9.5, 2])
-    
+
 with title_col:
     st.markdown("<h1 style='text-align: center; font-family: FreeMono, monospace;font-size: 110px; color: #FFFFFF;'>ForestVision.AI</h1>", unsafe_allow_html=True)
 
@@ -197,32 +352,32 @@ with title_col:
 col1, col2,col3 = st.columns([5, 5, 5])
 with col2:
     st.session_state.input_spinner_placeholder = st.empty()
-    
+
 input_col1, map_col, example_col = st.columns([4, 20, 4])
-with input_col1:    
-    st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 15px;'><b>Inputs</b></p>", unsafe_allow_html=True)            
+with input_col1:
+    st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 15px;'><b>Inputs</b></p>", unsafe_allow_html=True)
     with st.container(border=True, height = 470):
 
-        st.session_state.latitude_input = st.text_input('Latitude', '-8.49000', 
+        st.session_state.latitude_input = st.text_input('Latitude', '-8.49000',
                                                         help = "Enter the longitude coordinates of your desired area of interest. Press enter to view on map.")
         st.session_state.longitude_input = st.text_input('Longitude', '-55.26000')
-        
-        
-        start_timeframe = st.date_input('Start date', dt.datetime(2017, 6, 30), 
+
+
+        start_timeframe = st.date_input('Start date', dt.datetime(2017, 6, 30),
                                         min_value=dt.datetime(2017, 1, 1),
-                                        max_value= dt.datetime(2024, 12, 31), 
+                                        max_value= dt.datetime(2024, 12, 31),
                                         help= "Select the start and end date of your desired timeframe.")
         end_timeframe = st.date_input('End date',
                                     min_value=dt.datetime(2017, 1, 1),
                                     max_value= dt.datetime(2024, 12, 31))
-        
+
         factors = [1, 2, 3, 4, 5, 10, 25, 50, 100]
         square_size_options = [5.12 * factor for factor in factors]
         labels = {val: f"{val:.2f}" for val in square_size_options}
         default_value = square_size_options[0]
         square_size = 5.12
         sample_number = 1
-        
+
         params= {
             'start_timeframe': start_timeframe,
             'end_timeframe': end_timeframe,
@@ -237,13 +392,13 @@ with input_col1:
                     st.session_state.zoom = 12.5
 
         everything_api = "https://south-american-forest-llzimbumzq-oe.a.run.app/do_everything_self"
-        if st.button("**Calculate forest loss**", use_container_width=True, type='primary', help= 'Click me to calculate deforestation.'):   
+        if st.button("**Calculate forest loss**", use_container_width=True, type='primary', help= 'Click me to calculate deforestation.'):
             latitude = st.session_state.latitude_input
             longitude = st.session_state.longitude_input
             start_date = start_timeframe
             end_date = end_timeframe
             process_forest_loss_calculation(latitude, longitude, start_date, end_date)
-                    
+
 with example_col:
     st.markdown("<p style='text-align: center; font-family: FreeMono, monospace;font-size: 15px;'><b>Examples</b></p>", unsafe_allow_html=True)
     with st.container(border=True, height = 228):
@@ -258,11 +413,11 @@ with example_col:
             st.session_state.zoom = 12.5
             st.session_state.start_timeframe = "2017-08-24"
             st.session_state.end_timeframe = "2024-04-24"
-            
-            process_forest_loss_calculation(st.session_state.latitude_input, st.session_state.longitude_input, 
+
+            process_forest_loss_calculation(st.session_state.latitude_input, st.session_state.longitude_input,
                                             st.session_state.start_timeframe, st.session_state.end_timeframe)
 
-    
+
     with st.container(border=True, height = 228):
         st.image('https://vikfalk.github.io/deforestation_frontend/images/bolivia.png')
         if st.button('View on map    ', use_container_width=True):
@@ -275,15 +430,15 @@ with example_col:
             st.session_state.zoom = 12.5
             st.session_state.start_timeframe = "2017-08-24"
             st.session_state.end_timeframe = "2024-04-24"
-            
-            process_forest_loss_calculation(st.session_state.latitude_input, st.session_state.longitude_input, 
+
+            process_forest_loss_calculation(st.session_state.latitude_input, st.session_state.longitude_input,
                                             st.session_state.start_timeframe, st.session_state.end_timeframe)
 
 # Map
 view_state = pdk.ViewState(
     longitude=float(st.session_state.longitude_input),
     latitude=float(st.session_state.latitude_input),
-    zoom=st.session_state.zoom 
+    zoom=st.session_state.zoom
 )
 
 half_side_length = float(square_size) / 2 / 110.574
@@ -322,12 +477,12 @@ with map_col:
         layers=[polygon_layer],
         tooltip=False
     ))
-    
+
 st.markdown(' ')
-    
+
 if 'output' not in st.session_state:
     st.session_state.output = False
-    
+
 if st.session_state.output:
     with st.container():
         col1, col2, col3 = st.columns([11, 3, 11])
@@ -350,22 +505,22 @@ if st.session_state.output:
 
             st.markdown("<p style='text-align: left; font-family: FreeMono, monospace; font-size: 18px;'><b>End date</b></p>", unsafe_allow_html=True)
             st.image(st.session_state.end_sat, use_column_width=True, caption='Satellite image')
-                
-            
-                
+
+
+
         with forest_col:
             st.markdown("<p style='text-align: left; font-family: FreeMono, monospace; color: #0E1117; font-size: 18px;'><b>Start date</b></p>", unsafe_allow_html=True)
             st.image(st.session_state.start_overlay, use_column_width=True, caption='Predicted forest area')
 
             st.markdown("<p style='text-align: left; font-family: FreeMono, monospace; color: #0E1117; font-size: 18px;'><b>End date</b></p>", unsafe_allow_html=True)
             st.image(st.session_state.end_overlay, use_column_width=True, caption='Predicted forest area' )
-                
+
         with overlay_col:
             with st.container(border=True, height = 620):
                 st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 22px;'><b>Total Forest Change</b></p>", unsafe_allow_html=True)
                 st.image(st.session_state.total_calculated_overlay)
                 st.image('https://vikfalk.github.io/deforestation_frontend/images/legend.png')
-    
+
         with metrics_col:
             with st.container(border=True, height = 620):
                 st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 22px;'><b>Metrics</b></p>", unsafe_allow_html=True)
@@ -392,7 +547,7 @@ if st.session_state.output:
                     st.markdown('<div style="display: flex; justify-content: center; align-items: center; background-color: #994636; border-radius: 10px; height: 150px; padding: 5px"; border>'
                             f'<p style="color: white; font-size: 80px; font-weight: bold; margin: 0;">- {st.session_state.total_deforestation:.0f}%</p>'
                             '</div>', unsafe_allow_html=True)
-             
+
                 with forest_loss_ha_tab:
                     st.markdown('Start date forest area (hectares)')
                     st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #262730; border-radius: 10px; width: {st.session_state.start_forest_cover_percent_int}%; height: 50px; padding: 5px">'
@@ -430,7 +585,7 @@ if st.session_state.output:
                                     unsafe_allow_html=True,
                         )
                     with sub1:
-                        st.metric(value = round(st.session_state.loft_loss), label = '🚗 LeWagon Berlin Lofts', help = 'Equivalent to 187m2')                        
+                        st.metric(value = round(st.session_state.loft_loss), label = '🚗 LeWagon Berlin Lofts', help = 'Equivalent to 187m2')
                     with sub2:
                         st.metric(value = round(st.session_state.berg_loss), label = ' 🏢 Berghains', help = "Equivalent to 2838 m2. But it's just a guess, none of us have gotten in...")
                     st.markdown('####')
@@ -446,11 +601,8 @@ if st.session_state.output:
                                 """,
                                     unsafe_allow_html=True,
                         )
-                    with sub1:                                    
-                         st.metric(value = round(st.session_state.human_co2_cons_equ), label = '✈️ Annual per capita emissions', help = 'Assumption: 4.7 tonnes CO2 emitted annually per capita.')      
-                        
+                    with sub1:
+                         st.metric(value = round(st.session_state.human_co2_cons_equ), label = '✈️ Annual per capita emissions', help = 'Assumption: 4.7 tonnes CO2 emitted annually per capita.')
+
                     with sub2:
                         st.metric(value = round(st.session_state.beef_equ), label = '🐮 Kilograms of beef', help = 'Based on the production of this amount of beef. Assumption: 0.1 tons CO2 per kg')
-                        
-                    
-                  
