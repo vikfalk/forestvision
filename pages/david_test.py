@@ -74,11 +74,8 @@ if st.button("Send Request"):
     # ORIGINAL IMAGES
     if send_orginal_images == 'True':
         img_b64_list = response.json().get("original_img_list")
-        st.write(len(img_b64_list))
         original_image_arrays = [base64_to_numpy(img_b64) for img_b64 in img_b64_list]
-        st.write(len(original_image_arrays))
         original_image_list = [Image.fromarray(image) for image in original_image_arrays]
-        st.write(len(original_image_list))
 
     # METRICS
     coverage_list = [round(((np.count_nonzero(arr == 0) / arr.size) * 100), 1) for arr in segmented_image_arrays]
