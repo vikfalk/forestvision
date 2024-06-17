@@ -29,9 +29,6 @@ def date_reformatter(row):
     except TypeError:
         return pd.NA
 
-# INSTRUCTION:
-# Enter "# Enter "streamlit run Deforestation_Calculator.py" in the terminal to run it locally."
-
 col1, col2, col3 = st.columns(3)
 latitude_input = float(col1.text_input('Latitude', '-8.48638'))
 longitude_input = float(col2.text_input('Longitude', '-55.26209'))
