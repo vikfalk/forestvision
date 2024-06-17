@@ -1,7 +1,6 @@
 import os
 import io
 import base64
-import uvicorn
 import numpy as np
 import datetime as dt
 from fastapi import FastAPI
@@ -92,4 +91,5 @@ def get_satellite_images(
     return JSONResponse(content=json_response_content)
 
 if __name__ == "__main__":
+    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ["PORT"]))
