@@ -1,8 +1,8 @@
-from deforestation_tracker.sentinelhub_requester import search_available_L2A_tiles, request_image, sentinelhub_authorization, box_from_point, sentinel_build_request
-from deforestation_tracker.utils import path_constructor, timeframe_constructor
-from PIL import Image
 import numpy as np
+from PIL import Image
 from sentinelhub import SentinelHubDownloadClient
+from deforestation_tracker.utils import path_constructor
+from deforestation_tracker.sentinelhub_requester import search_available_L2A_tiles, request_image, sentinelhub_authorization, box_from_point, sentinel_build_request
 
 
 def load_img_array_from_satellite(
@@ -62,8 +62,7 @@ def load_multiple_imgs_from_sat_vis(
 def load_multiple_imgs_from_sat(
         lat_deg: float = -8.48638,
         lon_deg: float = -55.26209,
-        date_list: list = ["2020-05-30", "2024-05-30"],
-        request_type: str = "TrueColor"):
+        date_list: list = ["2020-05-30", "2024-05-30"]):
     """Loads available satellite image arrays from sentinel hub at multiple times."""
 
     box = box_from_point(lat_deg=lat_deg, lon_deg=lon_deg, image_size_px=512, resolution_m_per_px=10)
@@ -83,15 +82,3 @@ def load_multiple_imgs_from_sat(
     list_of_requests = [request.download_list[0] for request in list_of_requests]
     img_arrays = SentinelHubDownloadClient(config=config).download(list_of_requests, max_threads=5)
     return date_list_available, img_arrays
-
-
-def load_img_array_locally(image_name_without_ending="after_resized"):
-    input_path, output_path = path_constructor(image_name_without_ending)
-    img = Image.open(input_path)
-    img_array = np.array(img) / 255.0
-    return img_array
-
-
-# img_array, request_info = load_img_array_from_satellite()
-# print(request_info)
-#print(load_multiple_imgs_from_sat()[0])
