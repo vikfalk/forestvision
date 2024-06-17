@@ -42,9 +42,8 @@ backend_api_mode = st.radio('Backend API Mode', ('Local', 'Cloud'))
 # REQUEST
 if backend_api_mode == 'Local':
     api_url = "http://localhost:8080/get_satellite_images"
-elif backend_api_mode == 'Local':
-    # TODO: Change this after making a new container.
-    api_url = "https://forestvision-llzimbumzq-oe.a.run.app/get_satellite_images"
+elif backend_api_mode == 'Cloud':
+    api_url = "https://forest-vision-ai-llzimbumzq-oe.a.run.app/get_satellite_images"
 st.write(f'API url that will be used: {api_url}')
 
 params = {

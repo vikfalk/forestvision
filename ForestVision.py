@@ -8,7 +8,7 @@ import datetime as dt
 import streamlit as st
 from processing.frontend_processing import smooth_and_vectorize
 
-CLOUD_URL = "https://south-american-forest-llzimbumzq-oe.a.run.app/do_everything_self"
+CLOUD_URL = "https://forest-vision-ai-llzimbumzq-oe.a.run.app/get_satellite_images"
 LOCAL_URL = "http://localhost:8080/get_satellite_images"
 
 def base64_to_numpy(img_b64):
@@ -29,7 +29,7 @@ def process_forest_loss_calculation(latitude, longitude, start_date, end_date, a
     try:
         with st.session_state.input_spinner_placeholder, st.spinner('Requesting satellite images from Sentinel-2 L2A API...'):
             response = requests.get(
-                url=api_url,  # TODO: Change API_URL
+                url=api_url,
                 params=params,
                 timeout=60)
 
@@ -244,7 +244,7 @@ with input_col1:
             longitude = st.session_state.longitude_input
             start_date = start_timeframe
             end_date = end_timeframe
-            process_forest_loss_calculation(latitude, longitude, start_date, end_date, LOCAL_URL)
+            process_forest_loss_calculation(latitude, longitude, start_date, end_date, CLOUD_URL)
 
 with example_col:
     st.markdown("<p style='text-align: center; font-family: FreeMono, monospace;font-size: 15px;'><b>Examples</b></p>", unsafe_allow_html=True)
@@ -262,7 +262,7 @@ with example_col:
             st.session_state.end_timeframe = "2024-04-24"
 
             process_forest_loss_calculation(st.session_state.latitude_input, st.session_state.longitude_input,
-                                            st.session_state.start_timeframe, st.session_state.end_timeframe, LOCAL_URL)
+                                            st.session_state.start_timeframe, st.session_state.end_timeframe, CLOUD_URL)
 
 
     with st.container(border=True, height = 228):
@@ -279,7 +279,7 @@ with example_col:
             st.session_state.end_timeframe = "2024-04-24"
 
             process_forest_loss_calculation(st.session_state.latitude_input, st.session_state.longitude_input,
-                                            st.session_state.start_timeframe, st.session_state.end_timeframe, LOCAL_URL)
+                                            st.session_state.start_timeframe, st.session_state.end_timeframe, CLOUD_URL)
 
 # Map
 view_state = pdk.ViewState(
