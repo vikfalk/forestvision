@@ -16,7 +16,7 @@ To run ForestVision locally, follow these steps:
 
 1. **Clone the repository**:
     ```sh
-    git clone https://github.com/yourusername/forestvision.git
+    git clone https://github.com/vikfalk/forestvision.git
     cd forestvision
     ```
 
@@ -33,7 +33,7 @@ To run ForestVision locally, follow these steps:
 
 4. **Run the Streamlit application**:
     ```sh
-    streamlit run app.py
+    streamlit run ForestVision.py
     ```
 
 ## Usage
@@ -50,7 +50,7 @@ To run ForestVision locally, follow these steps:
 
 ## Project Structure
 
-- **`app.py`**: Main application file containing the Streamlit interface and core logic.
+- **`ForestVision.py`**: Main application file containing the Streamlit interface and core logic.
 - **`requirements.txt`**: List of Python dependencies required for the project.
 - **`smooth_and_vectorize.py`**: Utility script for image processing (if applicable).
 - **`example_images/`**: Directory containing example images used in the app.
@@ -58,10 +58,6 @@ To run ForestVision locally, follow these steps:
 ## Acknowledgements
 
 This project utilizes various open-source libraries and APIs for satellite imagery and image processing. Special thanks to the developers and contributors of these tools.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
 ## Contributing
 
