@@ -10,6 +10,10 @@ ForestVision is a web-based tool designed to analyze deforestation over a specif
 - **Interactive Map**: Display the selected area on an interactive map with an overlay indicating the deforested area.
 - **Deforestation Metrics**: Calculate and display key metrics, including the percentage of forest cover loss, total deforested area in hectares, and annual CO2 loss due to deforestation.
 
+## Try ForestVision Online
+
+You can try ForestVision without installing anything by visiting our web app at [ForestVision Web App](https://vikfalk-deforestation-frontend-forestvision-s58t4z.streamlit.app/). Explore deforestation trends and visualize forest cover changes directly in your browser 🌳
+
 ## Installation
 
 To run ForestVision locally, follow these steps:
