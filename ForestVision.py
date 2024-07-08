@@ -5,8 +5,6 @@ from PIL import Image
 import requests
 import numpy as np
 from processing.frontend_processing import smooth_and_vectorize
-import streamlit_lottie
-import io
 import pandas as pd
 
 from st_pages import hide_pages

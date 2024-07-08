@@ -8,3 +8,4 @@ opencv-python-headless
 streamlit_lottie
 pandas
 bytesbufio
+st_pages
