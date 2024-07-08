@@ -159,8 +159,7 @@ def process_forest_loss_calculation(latitude, longitude, start_date, end_date):
             st.session_state.zoom = 12.5
         
     except (requests.RequestException, ValueError) as e:
-        with st.session_state.input_spinner_placeholder:
-            st.markdown('No suitable image found near your start date. Please try another.')
+        st.markdown('No suitable image found near your start date. Please try a different location or timeframe.')
 
 st.set_page_config(
     page_title="ForestVision AI",
@@ -219,8 +218,8 @@ st.markdown(
 
 
 if 'latitude_input' not in st.session_state:
-    st.session_state.latitude_input = '-8.49000'
-    st.session_state.longitude_input = '-55.26000'
+    st.session_state.latitude_input = '-8.49'
+    st.session_state.longitude_input = '-55.26'
 
 with st.sidebar:
     st.markdown(' ')
@@ -328,7 +327,7 @@ with st.sidebar:
 
 if 'zoom' not in st.session_state:
     st.session_state.longitude_input = -55.26000
-    st.session_state.longitude_input = -8.49000
+    st.session_state.latitude_input = -8.49000
     st.session_state.end_timeframe = dt.datetime(2024, 1, 1)
     st.session_state.start_timeframe = dt.datetime(2021, 1, 1)
     st.session_state.zoom = 0.9
