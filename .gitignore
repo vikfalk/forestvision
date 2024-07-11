@@ -19,9 +19,6 @@ segmented_output_files/
 raw_data/
 sentinel_imgs/
 
-# Viktor extra code
-viktor_code.py
-
 # Python version
 .python-version
 

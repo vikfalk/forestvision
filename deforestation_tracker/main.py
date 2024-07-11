@@ -5,7 +5,7 @@ import numpy as np
 import datetime as dt
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from tensorflow.keras.models import load_model
+from keras.models import load_model
 from deforestation_tracker.custom_layer import RepeatElements
 from deforestation_tracker.segmenter import segment
 from deforestation_tracker.image_array_loaders import load_multiple_imgs_from_sat
