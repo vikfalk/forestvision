@@ -13,15 +13,6 @@ def timeframe_constructor(datetime_string="2021-01-01", temporal_padding=14):
     time_interval = (timeframe_start.strftime("%Y-%m-%d"), timeframe_end.strftime("%Y-%m-%d"))
     return time_interval
 
-def path_constructor(image_name_without_ending="after_resized"):
-    """Mainly for testing: Hard coded function that returns paths to pulls in local .tiff file and output a .png file."""
-    input_file_ending = ".tiff"
-    output_file_ending = ".png"
-    image_name_ = image_name_without_ending
-    input_path_ = "./raw_data/our_images/" + image_name_ + input_file_ending
-    output_path_ = "./segmented_output_files/" + image_name_ + output_file_ending
-    return input_path_, output_path_
-
 def calculate_black_coverage(image_array):
     total_pixels = image_array.size
     black_pixels = np.sum(image_array == 0)

@@ -7,14 +7,9 @@ from sentinelhub import (
     CRS,
     BBox,
     DataCollection,
-    DownloadRequest,
     MimeType,
-    MosaickingOrder,
-    SentinelHubDownloadClient,
     SentinelHubRequest,
-    bbox_to_dimensions,
     SentinelHubCatalog
-
 )
 from deforestation_tracker.utils import timeframe_constructor
 
