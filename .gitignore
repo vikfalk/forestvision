@@ -27,3 +27,34 @@ davids_frontend_nb.ipynb
 
 # python version
 .python-version
+# Local Notebooks
+davids_backend_nb.ipynb
+victors_model.ipynb
+
+# temporary files of macOS
+.DS_Store
+
+# sentinel image notebooks
+Fetch_Sentinel_Image.ipynb
+.ipynb_checkpoints
+
+# environmental variables
+.env
+.envrc
+env.yaml
+
+# data
+segmented_output_files/
+raw_data/
+sentinel_imgs/
+
+# Python version
+.python-version
+
+# Pycache
+__pycache__/
+
+# testing.py to run some checks
+testing.py
+install.txt
+Notes.md
