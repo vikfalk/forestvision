@@ -1,0 +1,11 @@
+streamlit==1.35.0
+pydeck
+numpy
+datetime
+pillow
+requests
+opencv-python-headless
+streamlit_lottie
+pandas
+bytesbufio
+st_pages
