@@ -1,14 +1,14 @@
 import os
 import io
 import base64
-import numpy as np
 import datetime as dt
+import numpy as np
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from keras.models import load_model
-from deforestation_tracker.custom_layer import RepeatElements
-from deforestation_tracker.segmenter import segment
-from deforestation_tracker.image_array_loaders import load_multiple_imgs_from_sat
+from tensorflow.keras.models import load_model
+from backend.custom_layer import RepeatElements
+from backend.segmenter import segment
+from backend.image_array_loaders import load_multiple_imgs_from_sat
 
 def numpy_to_base64(img_array):
     img_bytes = io.BytesIO()
@@ -62,7 +62,7 @@ def get_satellite_images(
         combined_img_arrays.append(np.dstack((vis_at_date, band_4_at_date)))
 
     # Segmenting
-    model = load_model('./deforestation_tracker/model_ressources/att_unet_4b.hdf5', custom_objects={'RepeatElements': RepeatElements})
+    model = load_model('./backend/model_ressources/att_unet_4b.hdf5', custom_objects={'RepeatElements': RepeatElements})
     segmented_img_arrays = [segment(img_at_date, model, threshold=0.7) for img_at_date in combined_img_arrays]
 
     # Removing entries that corresponed to misshaped segmented_img_array

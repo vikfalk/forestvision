@@ -6,7 +6,7 @@ with open('requirements.txt', encoding='utf-8') as f:
 requirements = [x.strip() for x in content]
 
 setup(
-    name='deforestation_tracker',
-    description="Backend of the Deforestation Tracker web app",
+    name='backend',
+    description="Backend of the ForestVision web app",
     packages=find_packages(),
     install_requires=requirements)

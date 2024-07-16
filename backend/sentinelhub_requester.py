@@ -11,7 +11,7 @@ from sentinelhub import (
     SentinelHubRequest,
     SentinelHubCatalog
 )
-from deforestation_tracker.utils import timeframe_constructor
+from backend.utils import timeframe_constructor
 
 def box_from_point(lat_deg, lon_deg, image_size_px = 512, resolution_m_per_px = 10):
     """

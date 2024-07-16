@@ -1,15 +1,5 @@
-streamlit==1.35.0
-pydeck
-numpy
-datetime
-pillow
-requests
-opencv-python-headless
-streamlit_lottie
-pandas
-bytesbufio
-st_pages
-sentinelhub
+# backend
+sentinelhub==3.10.2
 fastapi==0.111.0
 numpy==1.26.4
 Pillow==10.3.0
@@ -17,3 +7,13 @@ tensorflow_macos==2.16.1; sys_platform == 'darwin'
 tensorflow==2.16.1; sys_platform != 'darwin'
 keras==3.2.1
 uvicorn==0.30.1
+
+# frontend
+streamlit==1.35.0
+pydeck==0.9.1
+requests==2.32.3
+opencv-python-headless==4.10.0.84
+streamlit_lottie
+pandas==2.2.2
+bytesbufio==1.0.3
+st_pages
