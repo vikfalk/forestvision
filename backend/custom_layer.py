@@ -1,7 +1,7 @@
-from keras import backend as K
-from keras.layers import Lambda
-from keras.layers import Layer
-from keras.utils import get_custom_objects
+from tensorflow.keras import backend as K
+from tensorflow.keras.layers import Lambda
+from tensorflow.keras.layers import Layer
+from tensorflow.keras.utils import get_custom_objects
 
 
 def repeat_elem(tensor, rep, output_shape=None):

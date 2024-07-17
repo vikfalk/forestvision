@@ -1,18 +1,16 @@
-import streamlit as st
-import datetime as dt
-import pydeck as pdk
-from PIL import Image
-import requests
-import numpy as np
-from processing.frontend_processing import smooth_and_vectorize
-import pandas as pd
 import io
 import base64
-
+import numpy as np
+import datetime as dt
+import requests
+import pydeck as pdk
+from PIL import Image
+import streamlit as st
 from st_pages import hide_pages
+from processing.frontend_processing import smooth_and_vectorize
 
 
-CLOUD_URL = "https://forest-vision-reunited-llzimbumzq-oe.a.run.app/get_satellite_images"
+CLOUD_URL = "https://forestvision-llzimbumzq-oe.a.run.app/get_satellite_images"
 LOCAL_URL = "http://localhost:8080/get_satellite_images"
 api_url = CLOUD_URL
 
@@ -162,7 +160,7 @@ def process_forest_loss_calculation(latitude, longitude, start_date, end_date, a
             st.session_state.expander_open = True
             st.session_state.output = True
             st.session_state.zoom = 12.5
-        
+
     except (requests.RequestException, ValueError) as e:
         st.markdown('No suitable image found near your start date. Please try a different location or timeframe.')
 
@@ -231,19 +229,19 @@ with st.sidebar:
     st.title('Choose your own location')
     col1, col2 = st.columns(2)
     with col1:
-        st.session_state.latitude_input = st.text_input('Latitude ', st.session_state.latitude_input, 
+        st.session_state.latitude_input = st.text_input('Latitude ', st.session_state.latitude_input,
                                                         help = "Enter the longitude coordinates of your desired area of interest. Press enter to view on map.")
-        start_timeframe = st.date_input('Start date ', dt.datetime(2017, 6, 30), 
+        start_timeframe = st.date_input('Start date ', dt.datetime(2017, 6, 30),
                                         min_value=dt.datetime(2017, 1, 1),
-                                        max_value= dt.datetime(2024, 12, 31), 
+                                        max_value= dt.datetime(2024, 12, 31),
                                         help= "Select the start and end date of your desired timeframe.")
-        
+
         if st.button('View on map', use_container_width=True):
                     st.session_state.latitude_input = st.session_state.latitude_input
                     st.session_state.longitude_input = st.session_state.longitude_input
                     st.session_state.zoom = 12.5
-     
-     
+
+
     with col2:
         st.session_state.longitude_input = st.text_input('Longitude', st.session_state.longitude_input,)
         end_timeframe = st.date_input('End date ',
@@ -264,19 +262,19 @@ with st.sidebar:
         'square_size': square_size
     }
         everything_api = "https://south-american-forest-llzimbumzq-oe.a.run.app/do_everything_self"
-        if st.button("**Calculate forest loss**", use_container_width=True, type='primary', help= 'Click me to calculate deforestation.'):   
+        if st.button("**Calculate forest loss**", use_container_width=True, type='primary', help= 'Click me to calculate deforestation.'):
             latitude = st.session_state.latitude_input
             longitude = st.session_state.longitude_input
             start_date = start_timeframe
             end_date = end_timeframe
             process_forest_loss_calculation(latitude, longitude, start_date, end_date, api_url)
     #st.divider()
-    
+
     st.title('View an example')
     #with st.expander('Examples'):
     col1, col2 = st.columns(2)
     with col1:
-        
+
         with st.container(border=True, height = 228):
             st.image('https://vikfalk.github.io/deforestation_frontend/images/bolivia_example.png')
             if st.button('View on map        ', use_container_width=True):
@@ -289,10 +287,10 @@ with st.sidebar:
                 st.session_state.zoom = 12.5
                 st.session_state.start_timeframe = "2017-08-24"
                 st.session_state.end_timeframe = "2024-04-24"
-                
-                process_forest_loss_calculation(st.session_state.latitude_input, st.session_state.longitude_input, 
+
+                process_forest_loss_calculation(st.session_state.latitude_input, st.session_state.longitude_input,
                                                 st.session_state.start_timeframe, st.session_state.end_timeframe, api_url)
-    
+
     with col2:
         with st.container(border=True, height = 228):
             st.image('https://vikfalk.github.io/deforestation_frontend/images/brazil_example.png')
@@ -306,8 +304,8 @@ with st.sidebar:
                 st.session_state.zoom = 12.5
                 st.session_state.start_timeframe = "2017-08-24"
                 st.session_state.end_timeframe = "2024-04-24"
-                
-                process_forest_loss_calculation(st.session_state.latitude_input, st.session_state.longitude_input, 
+
+                process_forest_loss_calculation(st.session_state.latitude_input, st.session_state.longitude_input,
                                                 st.session_state.start_timeframe, st.session_state.end_timeframe, api_url)
 
     st.markdown(' ')
@@ -336,7 +334,7 @@ if 'zoom' not in st.session_state:
 view_state = pdk.ViewState(
     longitude=float(st.session_state.longitude_input),
     latitude=float(st.session_state.latitude_input),
-    zoom=st.session_state.zoom 
+    zoom=st.session_state.zoom
 )
 
 half_side_length = float(square_size) / 2 / 110.574
@@ -374,10 +372,10 @@ st.pydeck_chart(pdk.Deck(
 ))
 
 st.session_state.input_spinner_placeholder = st.empty()
-    
+
 if 'output' not in st.session_state:
     st.session_state.output = False
-    
+
 if st.session_state.output:
     with st.container():
         col1, col2, col3 = st.columns([11, 5, 11])
@@ -400,20 +398,20 @@ if st.session_state.output:
 
             st.markdown("<p style='text-align: left; font-family: FreeMono, monospace; font-size: 18px;'><b>End date</b></p>", unsafe_allow_html=True)
             st.image(st.session_state.end_sat, use_column_width=True, caption='Satellite image')
-            
+
         with forest_col:
             st.markdown("<p style='text-align: left; font-family: FreeMono, monospace; color: #0E1117; font-size: 18px;'><b>Start date</b></p>", unsafe_allow_html=True)
             st.image(st.session_state.start_overlay, use_column_width=True, caption='Predicted forest area')
 
             st.markdown("<p style='text-align: left; font-family: FreeMono, monospace; color: #0E1117; font-size: 18px;'><b>End date</b></p>", unsafe_allow_html=True)
             st.image(st.session_state.end_overlay, use_column_width=True, caption='Predicted forest area' )
-                
+
         with overlay_col:
             with st.container(border=True, height = 620):
                 st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 22px;'><b>Total Forest Change</b></p>", unsafe_allow_html=True)
                 st.image(st.session_state.total_calculated_overlay)
                 st.image('https://vikfalk.github.io/deforestation_frontend/images/legend.png')
-    
+
         with metrics_col:
             with st.container(border=True, height = 620):
                 st.markdown("<p style='text-align: center; font-family: FreeMono, monospace; font-size: 22px;'><b>Metrics</b></p>", unsafe_allow_html=True)
@@ -440,7 +438,7 @@ if st.session_state.output:
                     st.markdown('<div style="display: flex; justify-content: center; align-items: center; background-color: #994636; border-radius: 10px; height: 150px; padding: 5px"; border>'
                             f'<p style="color: white; font-size: 80px; font-weight: bold; margin: 0;">- {st.session_state.total_deforestation:.0f}%</p>'
                             '</div>', unsafe_allow_html=True)
-             
+
                 with forest_loss_ha_tab:
                     st.markdown('Start date forest area (hectares)')
                     st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #262730; border-radius: 10px; width: {st.session_state.start_forest_cover_percent_int}%; height: 50px; padding: 5px">'
@@ -478,7 +476,7 @@ if st.session_state.output:
                                     unsafe_allow_html=True,
                         )
                     with sub1:
-                        st.metric(value = round(st.session_state.loft_loss), label = '🚗 LeWagon Berlin Lofts', help = 'Equivalent to 187m2')                        
+                        st.metric(value = round(st.session_state.loft_loss), label = '🚗 LeWagon Berlin Lofts', help = 'Equivalent to 187m2')
                     with sub2:
                         st.metric(value = round(st.session_state.berg_loss), label = ' 🏢 Berghains', help = "Equivalent to 2838 m2. But it's just a guess, none of us have gotten in...")
                     st.markdown('####')
@@ -494,11 +492,10 @@ if st.session_state.output:
                                 """,
                                     unsafe_allow_html=True,
                         )
-                    with sub1:                                    
-                         st.metric(value = round(st.session_state.human_co2_cons_equ), label = '✈️ Annual per capita emissions', help = 'Assumption: 4.7 tonnes CO2 emitted annually per capita.')      
-                        
+                    with sub1:
+                         st.metric(value = round(st.session_state.human_co2_cons_equ), label = '✈️ Annual per capita emissions', help = 'Assumption: 4.7 tonnes CO2 emitted annually per capita.')
+
                     with sub2:
                         st.metric(value = round(st.session_state.beef_equ), label = '🐮 Kilograms of beef', help = 'Based on the production of this amount of beef. Assumption: 0.1 tons CO2 per kg')
-                        
-                    
-                  
+
+requests.get(url="https://forestvision-llzimbumzq-oe.a.run.app", timeout=10)
