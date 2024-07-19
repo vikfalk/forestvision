@@ -173,9 +173,6 @@ st.set_page_config(
 logo_url = 'https://vikfalk.github.io/deforestation_frontend/images/logo.png'
 st.sidebar.image(logo_url, use_column_width=True)
 
-hide_pages(["ForestVision", "david_test"])
-
-
 #Sidebar styling
 st.markdown(
     """
