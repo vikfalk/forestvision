@@ -6,7 +6,6 @@ import requests
 import pydeck as pdk
 from PIL import Image
 import streamlit as st
-from st_pages import hide_pages
 from processing.frontend_processing import smooth_and_vectorize
 
 
@@ -165,7 +164,7 @@ def process_forest_loss_calculation(latitude, longitude, start_date, end_date, a
         st.markdown('No suitable image found near your start date. Please try a different location or timeframe.')
 
 st.set_page_config(
-    page_title="ForestVision AI",
+    page_title="ForestVision",
     page_icon="🌳",
     layout="wide"
 )
