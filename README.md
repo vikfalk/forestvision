@@ -55,13 +55,6 @@ To run ForestVision locally, follow these steps:
     - **View on Map**: Click the "View on map" button to display the selected area on the map.
     - **Calculate**: Click the "Calculate" button to start the image retrieval and processing. The results will include satellite images, forest overlays, and deforestation metrics.
 
-## Project Structure
-
-- **`ForestVision.py`**: Main application file containing the Streamlit interface and core logic.
-- **`requirements.txt`**: List of Python dependencies required for the project.
-- **`smooth_and_vectorize.py`**: Utility script for image processing (if applicable).
-- **`example_images/`**: Directory containing example images used in the app.
-
 ## Acknowledgements
 
 This project utilizes various open-source libraries and APIs for satellite imagery and image processing. Special thanks to the developers and contributors of these tools.
