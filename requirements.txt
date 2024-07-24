@@ -14,4 +14,4 @@ pydeck==0.9.1
 requests==2.32.3
 opencv-python-headless==4.10.0.84
 pandas==2.2.2
-bytesbufio==1.0.
+bytesbufio==1.0.3
