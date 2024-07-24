@@ -453,7 +453,7 @@ if st.session_state.output:
             with st.container(border=True, height = 620):
                 st.markdown("<p style='text-align: center; font-size: 22px;'><b>Metrics</b></p>", unsafe_allow_html=True)
 
-                forest_loss_percent_tab, forest_loss_ha_tab, env_tab = st.tabs(['Forest Loss (%)', 'Forest Loss (ha)', 'Enviromental Impact'])
+                forest_loss_percent_tab, forest_loss_ha_tab = st.tabs(['Forest Loss (%)', 'Forest Loss (ha)'])
                 with forest_loss_percent_tab:
                     st.markdown('Start date forest cover')
                     st.markdown(f'<div style="display: flex; justify-content: left; align-items: center; background-color: #262730; border-radius: 10px; width: {st.session_state.start_forest_cover_percent_int}%; height: 50px; padding: 5px">'
@@ -497,43 +497,41 @@ if st.session_state.output:
                     st.markdown('<div style="display: flex; justify-content: center; align-items: center; background-color: #994636; border-radius: 10px; height: 150px; padding: 5px"; border>'
                             f'<p style="color: white; font-size: 80px; font-weight: bold; margin: 0;">- {st.session_state.total_deforestation_ha:.0f} ha</p>'
                             '</div>', unsafe_allow_html=True)
-                with env_tab:
-                    st.markdown('This loss of forest is equivalent to...')
-                    st.markdown('')
-                    st.markdown('##### Area (ha)')
-                    sub1, sub2 = env_tab.columns([2,2])
-                    st.markdown(
-                                    """
-                                <style>
-                                [data-testid="stMetricValue"] {
-                                    font-size: 50px;
-                                }
-                                </style>
-                                """,
-                                    unsafe_allow_html=True,
-                        )
-                    with sub1:
-                        st.metric(value = round(st.session_state.loft_loss), label = '🚗 LeWagon Berlin Lofts', help = 'Equivalent to 187m2')
-                    with sub2:
-                        st.metric(value = round(st.session_state.berg_loss), label = ' 🏢 Berghains', help = "Equivalent to 2838 m2. But it's just a guess, none of us have gotten in...")
-                    st.markdown('####')
-                    st.markdown('##### CO2 (tons)')
-                    sub1, sub2 = env_tab.columns([2,2])
-                    st.markdown(
-                                    """
-                                <style>
-                                [data-testid="stMetricValue"] {
-                                    font-size: 50px;
-                                }
-                                </style>
-                                """,
-                                    unsafe_allow_html=True,
-                        )
-                    with sub1:
-                         st.metric(value = round(st.session_state.human_co2_cons_equ), label = '✈️ Annual per capita emissions', help = 'Assumption: 4.7 tonnes CO2 emitted annually per capita.')
+                # with env_tab:
+                #     st.markdown('This loss of forest is equivalent to...')
+                #     st.markdown('')
+                #     st.markdown('##### Area (ha)')
+                #     sub1, sub2 = env_tab.columns([2,2])
+                #     st.markdown(
+                #                     """
+                #                 <style>
+                #                 [data-testid="stMetricValue"] {
+                #                     font-size: 50px;
+                #                 }
+                #                 </style>
+                #                 """,
+                #                     unsafe_allow_html=True,
+                #         )
+                #     with sub1:
+                #         st.metric(value = round(st.session_state.loft_loss), label = '🚗 LeWagon Berlin Lofts', help = 'Equivalent to 187m2')
+                #     st.markdown('####')
+                #     st.markdown('##### CO2 (tons)')
+                #     sub1, sub2 = env_tab.columns([2,2])
+                #     st.markdown(
+                #                     """
+                #                 <style>
+                #                 [data-testid="stMetricValue"] {
+                #                     font-size: 50px;
+                #                 }
+                #                 </style>
+                #                 """,
+                #                     unsafe_allow_html=True,
+                #         )
+                #     with sub1:
+                #          st.metric(value = round(st.session_state.human_co2_cons_equ), label = '✈️ Annual per capita emissions', help = 'Assumption: 4.7 tonnes CO2 emitted annually per capita.')
 
-                    with sub2:
-                        st.metric(value = round(st.session_state.beef_equ), label = '🐮 Kilograms of beef', help = 'Based on the production of this amount of beef. Assumption: 0.1 tons CO2 per kg')
+                #     with sub2:
+                #         st.metric(value = round(st.session_state.beef_equ), label = '🐮 Kilograms of beef', help = 'Based on the production of this amount of beef. Assumption: 0.1 tons CO2 per kg')
 
 
 if 'show_intervall_analytics' not in st.session_state:
