@@ -13,7 +13,7 @@ ForestVision is a web-based tool designed to analyze deforestation over a specif
 
 ## Try ForestVision Online
 
-You can try ForestVision without installing anything by visiting our web app at [ForestVision Web App](https://vikfalk-deforestation-frontend-forestvision-s58t4z.streamlit.app/). Explore deforestation trends and visualize forest cover changes directly in your browser 🌳
+You can try ForestVision without installing anything by visiting our web app at [ForestVision Web App](https://forestvision.streamlit.app/). Explore deforestation trends and visualize forest cover changes directly in your browser 🌳
 
 ## Run Locally
 
