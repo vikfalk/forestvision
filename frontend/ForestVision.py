@@ -419,7 +419,7 @@ if st.session_state.output:
         with col1:
             st.markdown('---')
         with col2:
-            st.markdown("<p style='text-align: center; font-family: Helvetica, sans serif; font-size: 30px;'><b>Output</b></p>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; font-size: 30px;'><b>Output</b></p>", unsafe_allow_html=True)
         with col3:
             st.markdown('---')
 
@@ -592,7 +592,7 @@ if st.session_state.show_intervall_analytics:
         "ha_per_months": "Monthy Loss in Hectar"})
 
     with st.container(border=False):
-        st.markdown("<p style='text-align: center; font-family: Helvetica, sans serif; font-size: 30px;'><b>Deforestation Over Time</b></p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-size: 30px;'><b>Deforestation Over Time</b></p>", unsafe_allow_html=True)
         # st.markdown("## Deforestation Over Time:")
         with st.container(border=True):
             cols = st.columns(len(date_list_loaded))
