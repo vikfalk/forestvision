@@ -629,7 +629,7 @@ if st.session_state.show_intervall_analytics:
         'cover_difference_perc_cumu': 'Cum. Difference in Coverage in Previous Period (%)',
         'cover_difference_ha': 'Forest Area Change in Previous Period (Hectar)',
         'cover_difference_ha_cumu': 'Cum. Forest Area Change in Previous Period (Hectar)',
-        'ha_per_months': 'Montly Area Loss Rate in Previous Period'
+        'ha_per_months': 'Monthly Area Loss Rate in Previous Period'
         })
     .astype('float32')
     .round(2)
