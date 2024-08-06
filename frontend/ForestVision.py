@@ -246,28 +246,37 @@ if 'latitude_input' not in st.session_state:
 
 with st.sidebar:
     st.markdown(' ')
-    st.markdown('''Track forest area change of any area on Earth using real-time \
-        satellite data and AI by inputting coordinates or choosing an example below.''')
+    st.markdown(
+        "Track forest area change of any area on Earth using real-time satellite "
+        "data and AI by inputting coordinates or choosing an example below."
+    )
     st.title('Choose your own location')
+
     col1, col2 = st.columns(2)
     with col1:
-        st.session_state.latitude_input = st.text_input('Latitude ', st.session_state.latitude_input,
-                                                        help = "Enter the longitude coordinates of your desired area of interest. Press enter to view on map.")
-        st.session_state.start_timeframe = st.date_input('Start date ', dt.datetime(2017, 6, 30),
-                                        min_value=dt.datetime(2017, 1, 1),
-                                        max_value= dt.datetime(2024, 12, 31),
-                                        help= "Select the start and end date of your desired timeframe.")
-
+        st.session_state.latitude_input = st.text_input(
+            'Latitude',
+            st.session_state.latitude_input,
+            help = (
+                "Enter the coordinates of your desired area of interest. "
+                "Press enter to view on map."
+            )
+        )
+        st.session_state.start_timeframe = st.date_input(
+            'Start date', dt.datetime(2017, 6, 30),
+            min_value=dt.datetime(2017, 1, 1),
+            max_value= dt.datetime(2024, 12, 31),
+            help= "Select the start and end date of your desired timeframe."
+        )
         if st.button('View on map', use_container_width=True):
-                    st.session_state.latitude_input = st.session_state.latitude_input
-                    st.session_state.longitude_input = st.session_state.longitude_input
-                    st.session_state.zoom = 12.5
-
+            st.session_state.latitude_input = st.session_state.latitude_input
+            st.session_state.longitude_input = st.session_state.longitude_input
+            st.session_state.zoom = 12.5
 
     with col2:
-        st.session_state.longitude_input = st.text_input('Longitude', st.session_state.longitude_input,)
+        st.session_state.longitude_input = st.text_input('Longitude', st.session_state.longitude_input)
         st.session_state.end_timeframe = st.date_input(
-            'End date ',
+            'End date',
             min_value=dt.datetime(2017, 1, 1),
             max_value= dt.datetime(2024, 12, 31)
         )
@@ -337,7 +346,7 @@ with st.sidebar:
         st.markdown('''# Detailed Analysis\nScrutinize incremental change between the start and end date by choosing the number of intermediary intervals and pressing the "Calculate" button.''')
     with col2:
         st.markdown("#")
-        sample_number = st.slider('', min_value=2, max_value=8)
+        sample_number = st.slider('Select a sample number', min_value=2, max_value=8, label_visibility="hidden")
         send_orginal_images = 'False'
         if st.checkbox('Also send raw images'):
             send_orginal_images = 'True'
@@ -351,8 +360,6 @@ with st.sidebar:
         }
         if st.button("Calculate", use_container_width=True, type='primary'):
             st.session_state.show_intervall_analytics = True
-
-    # with st.expander('View more time intervals and data visualizations.'):
 
 # Map
 if 'zoom' not in st.session_state:
@@ -598,7 +605,10 @@ if st.session_state.show_intervall_analytics:
             cols = st.columns(len(date_list_loaded))
             if send_orginal_images == 'False':
                 for col, request_info_date, segmented_image in zip(cols, date_list_loaded, segmented_image_list):
-                    col.markdown(f"<p style='text-align: center; font-size: 14px;'><b>{request_info_date}</b></p>", unsafe_allow_html=True)
+                    col.markdown(
+                        f"<p style='text-align: center; font-size: 14px;'><b>{request_info_date}</b></p>",
+                        unsafe_allow_html=True
+                    )
                     # col.markdown(f"{request_info_date}")
                     col.image(segmented_image, use_column_width=True)
             if send_orginal_images == 'True':
