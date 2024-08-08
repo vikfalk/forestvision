@@ -19,6 +19,7 @@ def repeat_elem(tensor, rep, output_shape=None):
 
 
 class RepeatElements(Layer):
+
     def __init__(self, rep, **kwargs):
         super(RepeatElements, self).__init__(**kwargs)
         self.rep = rep
