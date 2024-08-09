@@ -449,43 +449,38 @@ if st.session_state.get('output', False):
             """
         )
     with st.container(border=False):
-        sat_col, forest_col, overlay_col, metrics_col = st.columns([3.2, 3.2, 7, 7])
-        with sat_col:
-            st.empty()
-        with forest_col:
-            st.empty()
-        with overlay_col:
-            st.empty()
-        with metrics_col:
-            st.empty()
-        with sat_col:
+        component_col, overlay_col, metrics_col = st.columns(3)
+        with component_col:
             with st.container(border=True):
                 inject_bold_centered('Start Date')
-                st.image(
-                    st.session_state.start_sat,
-                    use_column_width=True,
-                    caption='Satellite image'
-                )
+                sat_col, forest_col = st.columns(2)
+                with sat_col:
+                    st.image(
+                        st.session_state.start_sat,
+                        use_column_width=True,
+                        caption='Satellite image'
+                    )
+                with forest_col:
+                    st.image(
+                        st.session_state.start_overlay,
+                        use_column_width=True,
+                        caption='Forest segments'
+                    )
                 inject_bold_centered('End Date')
-                st.image(
-                    st.session_state.end_sat,
-                    use_column_width=True,
-                    caption='Satellite image'
-                )
-        with forest_col:
-            with st.container(border=True):
-                inject_bold_centered('Start Date')
-                st.image(
-                    st.session_state.start_overlay,
-                    use_column_width=True,
-                    caption='Forest segments'
-                )
-                inject_bold_centered('End Date ')
-                st.image(
-                    st.session_state.end_overlay,
-                    use_column_width=True,
-                    caption='Forest segments'
-                )
+                sat_col, forest_col = st.columns(2)
+                with sat_col:
+                    st.image(
+                        st.session_state.end_sat,
+                        use_column_width=True,
+                        caption='Satellite image'
+                    )
+                with forest_col:
+                    st.image(
+                        st.session_state.end_overlay,
+                        use_column_width=True,
+                        caption='Forest segments'
+                    )
+
         with overlay_col:
             with st.container(border=True):
                 inject_bold_centered('Total Forest Change')
