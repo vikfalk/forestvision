@@ -14,7 +14,9 @@ from sentinelhub import (
 from backend.utils import timeframe_constructor
 
 
-def box_from_point(lat_deg, lon_deg, image_size_px=512, resolution_m_per_px=10) -> BBox:
+def create_bounding_box(
+        lat_deg, lon_deg, image_size_px=512, resolution_m_per_px=10
+    ) -> BBox:
     """
     Creates a coordinate bounding box (square) around a point of interest
     defined by latitude and longitude. image_size_px and resolution_m_per_px
@@ -37,10 +39,10 @@ def box_from_point(lat_deg, lon_deg, image_size_px=512, resolution_m_per_px=10) 
     west_lon = round(lon_deg + (sq_length_m / 2 / delta_meter_per_deg_lon), 5)
     return BBox((east_lon, south_lat, west_lon, north_lat), crs=CRS.WGS84)
 
-def sentinelhub_authorization() -> Tuple[SHConfig, SentinelHubCatalog]:
+def create_sentinelhub_token() -> Tuple[SHConfig, SentinelHubCatalog]:
     """
-    creates an access token with sentinelhub to be used for one hour.
-    returns the configuration to be used for requests
+    Creates an access token with sentinelhub to be used for one hour.
+    returns the configuration to be used for requests.
     """
     config = SHConfig()
     config.sh_client_id = os.getenv('SENTINEL_CLIENT_ID')
@@ -54,7 +56,7 @@ def sentinelhub_authorization() -> Tuple[SHConfig, SentinelHubCatalog]:
     return config, catalog
 
 
-def search_available_l2a_tiles(
+def search_optimal_l2a_tiles(
         catalog: SentinelHubCatalog,
         bbox: BBox,
         date_request: str,
@@ -167,7 +169,6 @@ def request_image(box, image_size_px, time_interval, config, request_type):
     elif request_type == '4-band':
         evalscript = evalscript_four_bands
     request = SentinelHubRequest(
-        data_folder="sentinel_imgs",
         evalscript=evalscript,
         input_data=[
             SentinelHubRequest.input_data(
@@ -196,22 +197,20 @@ def request_image(box, image_size_px, time_interval, config, request_type):
         return img
 
 
-def sentinel_build_request(
+def build_sentinel_request(
         config, box, request_type, request_date, image_size_px=512
     ):
     evalscript_true_color = """
         //VERSION=3
-
         function setup() {
-        return {
-            input: ["B02", "B03", "B04"],
-            output: {
-                bands: 3,
-                sampleType: "FLOAT32"
-            }
-        };
+            return {
+                input: ["B02", "B03", "B04"],
+                output: {
+                    bands: 3,
+                    sampleType: "FLOAT32"
+                }
+            };
         }
-
         function evaluatePixel(sample) {
             return [
                 2.5 * sample.B04,

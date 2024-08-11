@@ -1,10 +1,10 @@
 from typing import List
 from sentinelhub import SentinelHubDownloadClient
 from backend.sentinelhub_requester import (
-    search_available_l2a_tiles,
-    sentinelhub_authorization,
-    box_from_point,
-    sentinel_build_request
+    search_optimal_l2a_tiles,
+    create_sentinelhub_token,
+    create_bounding_box,
+    build_sentinel_request
 )
 
 
@@ -15,7 +15,7 @@ def load_multiple_imgs_from_sat(
     ):
     """Loads available image arrays from sentinel hub at multiple times."""
 
-    box = box_from_point(
+    box = create_bounding_box(
         lat_deg=lat_deg,
         lon_deg=lon_deg,
         image_size_px=512,
@@ -23,12 +23,12 @@ def load_multiple_imgs_from_sat(
     )
 
     # Authorize session
-    config, catalog_ = sentinelhub_authorization()
+    config, catalog_ = create_sentinelhub_token()
     date_list_available = []
     # search for available dates
     for date_i in date_list:
         # Search for tiles
-        optimal_tile = search_available_l2a_tiles(
+        optimal_tile = search_optimal_l2a_tiles(
             catalog=catalog_,
             bbox=box,
             date_request=date_i,
@@ -38,7 +38,7 @@ def load_multiple_imgs_from_sat(
         if optimal_tile:
            date_list_available.append(optimal_tile.get('date'))
     list_of_requests_vis= [
-        sentinel_build_request(
+        build_sentinel_request(
             config=config,
             box=box,
             request_type='TrueColor',
@@ -47,7 +47,7 @@ def load_multiple_imgs_from_sat(
         for date_i in date_list_available
     ]
     list_of_requests_fourband= [
-        sentinel_build_request(
+        build_sentinel_request(
             config=config,
             box=box,
             request_type='4-band',
