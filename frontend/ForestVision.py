@@ -1,24 +1,31 @@
 import datetime as dt
-from typing import List, Tuple
-import pydeck as pdk
-from PIL import Image
+from typing import List
 import streamlit as st
-import requests
 import numpy as np
-from processing.frontend_processing import (
-    smooth_and_vectorize,
-    calculate_metrics,
-    base64_to_numpy,
+import requests
+from frontend.map import inject_map
+from frontend.html_injection import (
+    inject_metric_bar,
+    inject_bold_centered,
+    inject_total_change
+)
+from frontend.processing.metrics import (
     label,
-    convert_to_ha
+    convert_to_ha,
+    calculate_metrics,
+)
+from frontend.processing.response_parsing import (
+    request_satellite_images,
+    parse_response,
+)
+from frontend.processing.graphics import (
+    overlay_vector_on_image
 )
 
 
 DARK_BLUE = "#262730"
 LIGHT_RED = "#994636"
 LIGHT_GREEN = "#00B272"
-SQUARE_SIZE = 5.12
-HECTAR_PER_IMAGE = 2621.44
 CO2_TONS_PER_HA_PER_YEAR = 11
 LOGO_URL = 'https://vikfalk.github.io/deforestation_frontend/images/logo.png'
 LEGEND_URL = 'https://vikfalk.github.io/deforestation_frontend/images/legend.png'
@@ -27,53 +34,6 @@ BOLIVIA_ICON_URL = 'https://vikfalk.github.io/deforestation_frontend/images/boli
 CLOUD_URL = "https://forestvision-llzimbumzq-oe.a.run.app/get_satellite_images"
 LOCAL_URL = "http://localhost:8080/get_satellite_images"
 API_URL = LOCAL_URL  # CLOUD_URL | LOCAL_URL
-
-
-def create_polygon_layer():
-    half_side_length = float(SQUARE_SIZE) / 2 / 110.574
-    square_coords = [
-        [float(st.session_state.longitude_input) - half_side_length,
-        float(st.session_state.latitude_input) - half_side_length],
-        [float(st.session_state.longitude_input) + half_side_length,
-        float(st.session_state.latitude_input) - half_side_length],
-        [float(st.session_state.longitude_input) + half_side_length,
-        float(st.session_state.latitude_input) + half_side_length],
-        [float(st.session_state.longitude_input) - half_side_length,
-        float(st.session_state.latitude_input) + half_side_length],
-        [float(st.session_state.longitude_input) - half_side_length,
-        float(st.session_state.latitude_input) - half_side_length]
-    ]
-
-    polygon_data = [{
-        "polygon": square_coords,
-        "name": "Deforestation Area"
-    }]
-
-    polygon_layer = pdk.Layer(
-        'PolygonLayer',
-        data=polygon_data,
-        get_polygon='polygon',
-        get_fill_color=[153, 70, 54, 40],
-        get_line_color=[153, 70, 54, 100],
-        get_line_width=10,
-        pickable=True,
-        extruded=False
-    )
-    return polygon_layer
-
-
-def inject_map():
-    view_state = pdk.ViewState(
-        longitude=float(st.session_state.longitude_input),
-        latitude=float(st.session_state.latitude_input),
-        zoom=st.session_state.zoom
-    )
-    st.pydeck_chart(pdk.Deck(
-        map_style='mapbox://styles/mapbox/satellite-streets-v12',
-        initial_view_state=view_state,
-        layers=[create_polygon_layer()],
-        tooltip=False
-    ))
 
 
 def set_metrics_session_states(
@@ -106,140 +66,44 @@ def set_metrics_session_states(
 def set_overlay_session_states(raw_images, segmented_images):
     st.session_state.start_sat = raw_images[0]
     st.session_state.end_sat = raw_images[-1]
-
-    st.session_state.start_vector_overlay = smooth_and_vectorize(
-        array=segmented_images[0],
-        hex_code=LIGHT_GREEN
+    st.session_state.start_overlay = overlay_vector_on_image(
+        vector=segmented_images[0],
+        image=raw_images[0],
+        vector_hex_code=LIGHT_GREEN
     )
-    st.session_state.start_overlay = Image.alpha_composite(
-        im1=Image.fromarray(raw_images[0]).convert('RGBA'),
-        im2=st.session_state.start_vector_overlay
+    st.session_state.end_overlay = overlay_vector_on_image(
+        vector=segmented_images[-1],
+        image=raw_images[-1],
+        vector_hex_code=LIGHT_GREEN
     )
-    # END
-    st.session_state.end_vector_overlay = smooth_and_vectorize(
-        array=segmented_images[-1],
-        hex_code=LIGHT_GREEN
-    )
-    st.session_state.end_overlay = Image.alpha_composite(
-        im1=Image.fromarray(raw_images[-1]).convert('RGBA'),
-        im2=st.session_state.end_vector_overlay
-    )
-    total_overlay_calculated = smooth_and_vectorize(
-        array=segmented_images[0] - segmented_images[-1],
-        hex_code=LIGHT_RED
-    )
-    st.session_state.total_calculated_overlay = Image.alpha_composite(
-        st.session_state.end_overlay,
-        total_overlay_calculated
+    st.session_state.total_change_overlay = overlay_vector_on_image(
+        vector=segmented_images[0] - segmented_images[-1],
+        image=st.session_state.end_overlay,
+        vector_hex_code=LIGHT_RED
     )
 
 
-def inject_bold_centered(text: str, font_em: float=1):
-    st.markdown(
-        f"""<p style='text-align: center; font-weight: bold; font-size: {font_em}em'> {text}</p>""",
-        unsafe_allow_html=True
-    )
-
-
-def inject_metric_bar(text: str, metric: float, unit: str = '%'):
-    st.markdown(
-        f"""
-        {text}
-        <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: {DARK_BLUE};
-            border-radius: 10px;
-            padding: 5px;
-            height: 3em;
-            width: {metric}%;
-            position: relative;">
-            <p style="
-                font-weight: bold;
-                font-size: 1.25em;
-                margin: 0;
-                width: 100%;
-            ">
-                {metric if unit == '%' else convert_to_ha(metric):.0f}{unit}
-            </p>
-        </div>""",
-        unsafe_allow_html=True
-    )
-
-
-def inject_total_change(metric: float, unit: str):
-    st.markdown(
-        f"""
-        Total Change
-        <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: {LIGHT_RED};
-            border-radius: 10px;
-            padding: 5px;
-            height: 6em;
-        ">
-            <p style="
-                font-weight: bold;
-                font-size: 2.5em;
-                margin: 0;
-            ">
-                {metric:.0f}{unit}</p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    st.markdown('')
-
-
-def request_satellite_images(latitude, longitude, start_date, end_date):
-    response = requests.get(
-        url=API_URL,
-        params={
-            'start_timeframe': start_date,
-            'end_timeframe': end_date,
-            'longitude': longitude,
-            'latitude': latitude,
-            'sample_number': 2,
-            'send_orginal_images': 'True'
-        },
-        timeout=60
-    )
-    return response
-
-
-def parse_response(
-    response: requests.Response
-    ) -> Tuple[List[str], List[np.ndarray], List[Image.Image]]:
-    image_dates = response.json().get("date_list_loaded")
-    segmented_images_b64 = response.json().get("segmented_img_list")
-    segmented_images = [base64_to_numpy(img_b64) for img_b64 in segmented_images_b64]
-    raw_images_b64 = response.json().get("original_img_list")
-    raw_images = [base64_to_numpy(img_b64) for img_b64 in raw_images_b64]
-    parsed_response = (image_dates, segmented_images, raw_images)
-    return parsed_response
-
-
-def process_forest_loss_calculation(latitude, longitude, start_date, end_date):
+def process_calculation_request(latitude, longitude, start_date, end_date):
     try:
         with st.session_state.input_spinner_placeholder, st.spinner(
             'Requesting satellite images from Sentinel-2 L2A API...'
         ):
-            st.session_state.response = request_satellite_images(latitude, longitude, start_date, end_date)
-
+            st.session_state.response = request_satellite_images(
+                url=API_URL,
+                latitude=latitude,
+                longitude=longitude,
+                start_date=start_date,
+                end_date=end_date
+            )
         with st.session_state.input_spinner_placeholder, st.spinner(
             'Processing images and calculating metrics...'
         ):
             image_dates, segmented_images, raw_images = parse_response(
                 st.session_state.response
             )
-
             set_metrics_session_states(image_dates, segmented_images)
             set_overlay_session_states(raw_images, segmented_images)
             st.session_state.zoom = 12.5
-
     except (requests.RequestException, ValueError):
         st.markdown(
             "No suitable image found near your start date. "
@@ -284,7 +148,7 @@ def fill_sidebar_top_col2():
         type='primary',
         help='Click me to calculate deforestation.'
     ):
-        process_forest_loss_calculation(
+        process_calculation_request(
             latitude=st.session_state.latitude_input,
             longitude=st.session_state.longitude_input,
             start_date=st.session_state.start_timeframe,
@@ -305,8 +169,7 @@ def fill_sidebar_bot_col1():
             st.session_state.zoom = 12.5
             st.session_state.start_timeframe = "2017-08-24"
             st.session_state.end_timeframe = "2024-04-24"
-
-            process_forest_loss_calculation(
+            process_calculation_request(
                 latitude=st.session_state.latitude_input,
                 longitude=st.session_state.longitude_input,
                 start_date=st.session_state.start_timeframe,
@@ -327,8 +190,7 @@ def fill_sidebar_bot_col2():
             st.session_state.zoom = 12.5
             st.session_state.start_timeframe = "2017-08-24"
             st.session_state.end_timeframe = "2024-04-24"
-
-            process_forest_loss_calculation(
+            process_calculation_request(
                 latitude=st.session_state.latitude_input,
                 longitude=st.session_state.longitude_input,
                 start_date=st.session_state.start_timeframe,
@@ -336,20 +198,24 @@ def fill_sidebar_bot_col2():
             )
 
 
-def fill_detailed_analysis_col_2():
-    st.markdown("#                 ")
+def fill_detailed_analysis_col_1() -> int:
     sample_number = st.slider(
         label='Select a sample number',
         min_value=2,
         max_value=8,
-        label_visibility="hidden"
     )
-    send_orginal_images = 'False'
-    if st.checkbox('Also send raw images'):
-        send_orginal_images = 'True'
-    if st.button("Calculate", use_container_width=True, type='primary'):
+    return sample_number
+
+
+def fill_detailed_analysis_col_2() -> None:
+    st.markdown("#                 ")
+    if st.button(
+        label="Calculate",
+        use_container_width=True,
+        type='primary',
+        help='Click me to calculate deforestation.'
+    ):
         st.session_state.show_intervall_analytics = True
-    return sample_number, send_orginal_images
 
 
 st.set_page_config(
@@ -381,15 +247,16 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
 st.sidebar.image(LOGO_URL, use_column_width=True)
 st.session_state.setdefault('latitude_input', '-8.49')
 st.session_state.setdefault('longitude_input', '-55.26')
-
 with st.sidebar:
     st.markdown(' ')
     st.markdown(
-        "Track forest area change of any area on Earth using real-time satellite "
-        "data and AI by inputting coordinates or choosing an example below."
+        """Track forest area change of any area on Earth using real-time
+        satellite data and AI by inputting coordinates or choosing an example
+        below."""
     )
     st.title('Choose your own location')
     col1, col2 = st.columns(2)
@@ -405,17 +272,18 @@ with st.sidebar:
         fill_sidebar_bot_col1()
     with col2:
         fill_sidebar_bot_col2()
+    st.markdown(
+        '''# Detailed Analysis\nFollow up by scrutinizing incremental change
+        between the start and end date. Choose the number of intermediary
+        intervals and press the "Calculate" button.
+        '''
+    )
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown(
-            '''# Detailed Analysis\nScrutinize incremental change between the
-            start and end date by choosing the number of intermediary intervals
-            and pressing the "Calculate" button.
-            '''
-        )
+        st.session_state.sample_number = fill_detailed_analysis_col_1()
     with col2:
-        sample_number, send_orginal_images = fill_detailed_analysis_col_2()
+        fill_detailed_analysis_col_2()
 
 if 'zoom' not in st.session_state:
     st.session_state.longitude_input = -55.26000
@@ -424,9 +292,11 @@ if 'zoom' not in st.session_state:
     st.session_state.start_timeframe = dt.datetime(2021, 1, 1)
     st.session_state.zoom = 0.9
     st.session_state.input_spinner_placeholder = None
-
-inject_map()
-
+inject_map(
+    lng=st.session_state.longitude_input,
+    lat=st.session_state.latitude_input,
+    zoom=st.session_state.zoom
+)
 st.session_state.input_spinner_placeholder = st.empty()
 
 if st.session_state.get('output', False):
@@ -480,16 +350,17 @@ if st.session_state.get('output', False):
                         use_column_width=True,
                         caption='Forest segments'
                     )
-
         with overlay_col:
             with st.container(border=True):
                 inject_bold_centered('Total Forest Change')
-                st.image(st.session_state.total_calculated_overlay)
+                st.image(st.session_state.total_change_overlay)
                 st.image(LEGEND_URL)
         with metrics_col:
             with st.container(border=True):
                 inject_bold_centered('Metrics')
-                percent_tab, hectar_tab = st.tabs(['Change in %', 'Change in ha'])
+                percent_tab, hectar_tab = st.tabs(
+                    ['Change in Percent', 'Change in Hectar']
+                )
                 with percent_tab:
                     inject_metric_bar(
                         text='Start Date Forest Cover',
@@ -520,27 +391,18 @@ if st.session_state.get('output', False):
                     inject_total_change(st.session_state.cover_diff_ha, ' ha')
 
 if st.session_state.get("show_intervall_analytics", False):
-    intervall_response = requests.get(
+    st.session_state.intervall_response = request_satellite_images(
         url=API_URL,
-        params={
-            'start_timeframe': st.session_state.start_timeframe,
-            'end_timeframe': st.session_state.end_timeframe,
-            'longitude': st.session_state.longitude_input,
-            'latitude': st.session_state.latitude_input,
-            'sample_number': sample_number,
-            'send_orginal_images': send_orginal_images
-        },
-        timeout=20
+        latitude=st.session_state.latitude_input,
+        longitude=st.session_state.longitude_input,
+        start_date=st.session_state.start_timeframe,
+        end_date=st.session_state.end_timeframe,
+        sample_number=st.session_state.sample_number
     )
-    date_list_loaded = intervall_response.json().get("date_list_loaded")
-    img_b64_list = intervall_response.json().get("segmented_img_list")
-    segmented_image_arrays = [base64_to_numpy(img_b64) for img_b64 in img_b64_list]
-    segmented_image_list = [Image.fromarray(image) for image in segmented_image_arrays]
-    if send_orginal_images == 'True':
-        img_b64_list = intervall_response.json().get("original_img_list")
-        original_image_arrays = [base64_to_numpy(img_b64) for img_b64 in img_b64_list]
-        original_image_list = [Image.fromarray(image) for image in original_image_arrays]
-    df = calculate_metrics(date_list_loaded, segmented_image_arrays)
+    image_dates, segmented_images, raw_images = parse_response(
+        st.session_state.intervall_response
+    )
+    df = calculate_metrics(image_dates, segmented_images)
     df_perc_cumu = df[["cover_diff_pp_cum"]].round(1).reset_index().rename(columns={
         "date": "Dates",
         "cover_diff_pp_cum": "Coverage Loss in %"}
@@ -552,18 +414,14 @@ if st.session_state.get("show_intervall_analytics", False):
     with st.container(border=False):
         inject_bold_centered('Deforestation Over Time', font_em=2)
         with st.container(border=True):
-            cols = st.columns(len(date_list_loaded))
-            if send_orginal_images == 'False':
-                for col, request_info_date, segmented_image in zip(cols, date_list_loaded, segmented_image_arrays):
-                    with col:
-                        inject_bold_centered(request_info_date)
-                    col.image(segmented_image, use_column_width=True)
-            if send_orginal_images == 'True':
-                for col, request_info_date, original_image, segmented_image in zip(cols, date_list_loaded, original_image_arrays, segmented_image_arrays):
-                    with col:
-                        inject_bold_centered(request_info_date)
-                    col.image(segmented_image, use_column_width=True)
-                    col.image(original_image, use_column_width=True)
+            cols = st.columns(len(image_dates))
+            for col, date, raw_image, segmented_image in zip(
+                cols, image_dates, raw_images, segmented_images
+            ):
+                with col:
+                    inject_bold_centered(date)
+                col.image(raw_image, use_column_width=True)
+                col.image(segmented_image, use_column_width=True)
         with st.container(border=True):
             col_a, col_b = st.columns(2)
             with col_a.container(border=False):
