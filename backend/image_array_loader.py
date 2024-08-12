@@ -8,26 +8,21 @@ from backend.sentinelhub_requester import (
 )
 
 
-def load_multiple_imgs_from_sat(
+def load_images_from_satellite(
         lat_deg: float,
         lon_deg: float,
         date_list: List[str]
     ):
     """Loads available image arrays from sentinel hub at multiple times."""
-
     box = create_bounding_box(
         lat_deg=lat_deg,
         lon_deg=lon_deg,
         image_size_px=512,
         resolution_m_per_px=10
     )
-
-    # Authorize session
     config, catalog_ = create_sentinelhub_token()
     date_list_available = []
-    # search for available dates
     for date_i in date_list:
-        # Search for tiles
         optimal_tile = search_optimal_l2a_tiles(
             catalog=catalog_,
             bbox=box,

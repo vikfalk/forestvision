@@ -90,16 +90,15 @@ def search_optimal_l2a_tiles(
         return None
     properties = []
     for tile in results:
-        # get time offset to requested date, get cloud cover
+        # Get time offset to requested date, get cloud cover.
         timedelta_tile = (
             dt.datetime.strptime(date_request, '%Y-%m-%d')\
             - dt.datetime.strptime(
-                tile.get('properties').get('datetime'),
-                '%Y-%m-%dT%H:%M:%SZ'
+                date_string=tile.get('properties').get('datetime'),
+                format='%Y-%m-%dT%H:%M:%SZ'
             )
         ).days
         cloud_cover_tile = tile.get('properties').get('eo:cloud_cover')
-        # penalty formula to weigh CC and time difference to desired date
         penalty = 10 * cloud_cover_tile + np.abs(timedelta_tile)
         tile_properties = [
             penalty,
@@ -107,8 +106,8 @@ def search_optimal_l2a_tiles(
                 'id': tile.get('id'),
                 'date': dt.datetime.strftime(
                     dt.datetime.strptime(
-                        tile.get('properties').get('datetime'),
-                        '%Y-%m-%dT%H:%M:%SZ'
+                        date_string=tile.get('properties').get('datetime'),
+                        format='%Y-%m-%dT%H:%M:%SZ'
                     ).date(),
                     '%Y-%m-%d'
                 ),
@@ -121,84 +120,12 @@ def search_optimal_l2a_tiles(
     return optimal_tile
 
 
-def request_image(box, image_size_px, time_interval, config, request_type):
-    evalscript_true_color = """
-        //VERSION=3
-        function setup() {
-            return {
-                input: ["B02", "B03", "B04"],
-                output: {
-                    bands: 3,
-                    sampleType: "FLOAT32"
-                }
-            };
-        }
-        function evaluatePixel(sample) {
-            return [
-                2.5 * sample.B04,
-                2.5 * sample.B03,
-                2.5 * sample.B02
-            ];
-        }
-    """
-    evalscript_four_bands = """
-        //VERSION=3
-        function setup() {
-            return {
-                input: [{
-                    bands: ["B02","B03","B04","B08"],
-                    units: "DN"
-                }],
-                output: {
-                    bands: 4,
-                    sampleType: "FLOAT32"
-                }
-            };
-        }
-        function evaluatePixel(sample) {
-            return [
-                sample.B02,
-                sample.B03,
-                sample.B04,
-                sample.B08,
-            ];
-        }
-    """
-    if request_type == 'TrueColor':
-        evalscript = evalscript_true_color
-    elif request_type == '4-band':
-        evalscript = evalscript_four_bands
-    request = SentinelHubRequest(
-        evalscript=evalscript,
-        input_data=[
-            SentinelHubRequest.input_data(
-                data_collection=DataCollection.SENTINEL2_L2A,
-                time_interval=time_interval,
-                other_args={
-                    "dataFilter": {
-                        "maxCloudCoverage": 50,
-                        "mosaickingOrder": "leastCC"
-                    }
-                }
-            )
-        ],
-        responses=[
-            SentinelHubRequest.output_response('default', MimeType.TIFF),
-        ],
-        bbox=box,
-        size=[image_size_px, image_size_px],
-        config=config
-    )
-    img = request.get_data()[0]
-
-    if request_type == 'TrueColor':
-        return np.clip(img, 0, 1)
-    elif request_type == '4-band':
-        return img
-
-
 def build_sentinel_request(
-        config, box, request_type, request_date, image_size_px=512
+        config: SHConfig,
+        box: BBox,
+        request_type: str,
+        request_date,
+        image_size_px=512
     ):
     evalscript_true_color = """
         //VERSION=3
