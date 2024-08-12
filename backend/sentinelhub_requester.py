@@ -247,7 +247,6 @@ def build_sentinel_request(
     elif request_type == '4-band':
         evalscript = evalscript_four_bands
     request = SentinelHubRequest(
-        data_folder="sentinel_imgs",
         evalscript=evalscript,
         input_data=[
             SentinelHubRequest.input_data(
