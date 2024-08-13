@@ -1,6 +1,18 @@
 import numpy as np
 import cv2
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageColor
+
+
+def bw_to_color(
+    bw_image: np.ndarray, black_substitute: str, white_substitute: str
+    ) -> np.ndarray:
+    black_substitute_rgb = ImageColor.getcolor(black_substitute, "RGB")
+    white_substitute_rgb = ImageColor.getcolor(white_substitute, "RGB")
+    height, width = bw_image.shape
+    color_image = np.zeros((height, width, 3), dtype=np.uint8)  # Initialize RGB image
+    color_image[bw_image == 0] = black_substitute_rgb
+    color_image[bw_image == 255] = white_substitute_rgb
+    return color_image
 
 
 def smooth_and_vectorize(array, hex_code, smoothing=9, opacity=0.5):

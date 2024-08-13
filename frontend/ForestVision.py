@@ -19,7 +19,8 @@ from frontend.processing.response_parsing import (
     parse_response,
 )
 from frontend.processing.graphics import (
-    overlay_vector_on_image
+    overlay_vector_on_image,
+    bw_to_color
 )
 
 
@@ -420,7 +421,14 @@ if st.session_state.get("show_intervall_analytics", False):
                 with col:
                     inject_bold_centered(date)
                 col.image(raw_image, use_column_width=True)
-                col.image(segmented_image, use_column_width=True)
+                col.image(
+                    bw_to_color(
+                        bw_image=segmented_image,
+                        black_substitute=LIGHT_RED,
+                        white_substitute=LIGHT_GREEN
+                    ),
+                    use_column_width=True
+                )
         with st.container(border=True):
             col_a, col_b = st.columns(2)
             with col_a.container(border=False):
