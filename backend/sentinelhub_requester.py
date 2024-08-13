@@ -94,8 +94,8 @@ def search_optimal_l2a_tiles(
         timedelta_tile = (
             dt.datetime.strptime(date_request, '%Y-%m-%d')\
             - dt.datetime.strptime(
-                date_string=tile.get('properties').get('datetime'),
-                format='%Y-%m-%dT%H:%M:%SZ'
+                tile.get('properties').get('datetime'),
+                '%Y-%m-%dT%H:%M:%SZ'
             )
         ).days
         cloud_cover_tile = tile.get('properties').get('eo:cloud_cover')
@@ -106,8 +106,8 @@ def search_optimal_l2a_tiles(
                 'id': tile.get('id'),
                 'date': dt.datetime.strftime(
                     dt.datetime.strptime(
-                        date_string=tile.get('properties').get('datetime'),
-                        format='%Y-%m-%dT%H:%M:%SZ'
+                        tile.get('properties').get('datetime'),
+                        '%Y-%m-%dT%H:%M:%SZ'
                     ).date(),
                     '%Y-%m-%d'
                 ),

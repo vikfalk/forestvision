@@ -203,12 +203,12 @@ def fill_detailed_analysis_col_1() -> int:
         label='Select a sample number',
         min_value=2,
         max_value=8,
+        label_visibility='collapsed'
     )
     return sample_number
 
 
 def fill_detailed_analysis_col_2() -> None:
-    st.markdown("#                 ")
     if st.button(
         label="Calculate",
         use_container_width=True,
@@ -278,7 +278,6 @@ with st.sidebar:
         intervals and press the "Calculate" button.
         '''
     )
-
     col1, col2 = st.columns(2)
     with col1:
         st.session_state.sample_number = fill_detailed_analysis_col_1()
