@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from tensorflow.keras.models import load_model
 from backend.custom_layer import RepeatElements
 from backend.segmenter import segment
-from backend.image_array_loaders import load_multiple_imgs_from_sat
+from backend.image_array_loader import load_images_from_satellite
 
 def numpy_to_base64(img_array):
     img_bytes = io.BytesIO()
@@ -39,19 +39,24 @@ def get_satellite_images(
     returned, higher sample_numbers will return data from points in time between
     the start and the end date, as evenly spaced as possible.
     """
-
-    # Construct list with request dates
-    start_dt, end_dt = dt.datetime.strptime(start_timeframe, "%Y-%m-%d"), dt.datetime.strptime(end_timeframe, "%Y-%m-%d")
+    start_dt = dt.datetime.strptime(start_timeframe, "%Y-%m-%d")
+    end_dt = dt.datetime.strptime(end_timeframe, "%Y-%m-%d")
     date_step_size = (end_dt - start_dt)/(int(sample_number) - 1)
-    date_list = [dt.date.strftime(start_dt + i * date_step_size, "%Y-%m-%d") for i in range(int(sample_number))]
+    date_list = [
+        dt.date.strftime(start_dt + i * date_step_size, "%Y-%m-%d")
+        for i in range(int(sample_number))
+    ]
 
-    # Load both 3-band and 4-band images
-    loaded_dates, img_arrays = load_multiple_imgs_from_sat(lat_deg=float(latitude), lon_deg=float(longitude), date_list=date_list)
+    loaded_dates, img_arrays = load_images_from_satellite(
+        lat_deg=float(latitude),
+        lon_deg=float(longitude),
+        date_list=date_list
+    )
 
-    # Join 3-band with 4-band and normalize 4-band channel to values between 0 and 1
     number_of_dates = len(loaded_dates)
     original_img_arrays = []
     combined_img_arrays = []
+    # Join 3- with 4-band, normalize 4-band channel to values between 0 and 1
     for date in range(number_of_dates):
         band_4_at_date = img_arrays[(date + number_of_dates)][:,:,3]
         vis_at_date = img_arrays[date]
@@ -61,29 +66,35 @@ def get_satellite_images(
         band_4_at_date = band_4_at_date / max_value
         combined_img_arrays.append(np.dstack((vis_at_date, band_4_at_date)))
 
-    # Segmenting
-    model = load_model('./backend/model_ressources/att_unet_4b.hdf5', custom_objects={'RepeatElements': RepeatElements})
-    segmented_img_arrays = [segment(img_at_date, model, threshold=0.7) for img_at_date in combined_img_arrays]
+    model = load_model(
+        filepath='./backend/model_ressources/att_unet_4b.hdf5',
+        custom_objects={'RepeatElements': RepeatElements}
+    )
+    segmented_img_arrays = [
+        segment(img_at_date, model, threshold=0.7)
+        for img_at_date in combined_img_arrays
+    ]
 
-    # Removing entries that corresponed to misshaped segmented_img_array
     for i, arr in enumerate(segmented_img_arrays):
         if arr.shape != (512, 512):
             loaded_dates.pop(i)
             original_img_arrays.pop(i)
             segmented_img_arrays.pop(i)
 
-    # Encoding
-    segmented_img_b64_list = [numpy_to_base64(img) for img in segmented_img_arrays]
-    original_img_b64_list = [numpy_to_base64(img) for img in original_img_arrays]
+    segmented_img_b64_list = [
+        numpy_to_base64(img)
+        for img in segmented_img_arrays
+    ]
+    original_img_b64_list = [
+        numpy_to_base64(img)
+        for img in original_img_arrays
+    ]
 
-    # Transmitting
     if send_orginal_images == 'False':
-        print("Not sending original satellite images.")
         json_response_content = {
                 "date_list_loaded": loaded_dates,
                 "segmented_img_list": segmented_img_b64_list}
     elif send_orginal_images == 'True':
-        print("Sending original satellite images, too under the key 'original_img_list'.")
         json_response_content = {
                 "date_list_loaded": loaded_dates,
                 "segmented_img_list": segmented_img_b64_list,
