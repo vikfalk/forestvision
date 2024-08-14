@@ -3,22 +3,22 @@ from typing import List
 import streamlit as st
 import numpy as np
 import requests
-from frontend.map import inject_map
-from frontend.html_injection import (
+from .map import inject_map
+from .html_injection import (
     inject_metric_bar,
     inject_bold_centered,
     inject_total_change
 )
-from frontend.processing.metrics import (
+from .processing.metrics import (
     label,
     convert_to_ha,
     calculate_metrics,
 )
-from frontend.processing.response_parsing import (
+from .processing.response_parsing import (
     request_satellite_images,
     parse_response,
 )
-from frontend.processing.graphics import (
+from .processing.graphics import (
     overlay_vector_on_image,
     bw_to_color
 )
@@ -34,7 +34,7 @@ BRAZIL_ICON_URL = 'https://vikfalk.github.io/deforestation_frontend/images/brazi
 BOLIVIA_ICON_URL = 'https://vikfalk.github.io/deforestation_frontend/images/bolivia_example.png'
 CLOUD_URL = "https://forestvision-llzimbumzq-oe.a.run.app/get_satellite_images"
 LOCAL_URL = "http://localhost:8080/get_satellite_images"
-API_URL = LOCAL_URL  # CLOUD_URL | LOCAL_URL
+API_URL = CLOUD_URL  # CLOUD_URL | LOCAL_URL
 
 
 def set_metrics_session_states(
