@@ -1,5 +1,5 @@
 import streamlit as st
-from .processing.metrics import convert_to_ha
+from utils.metrics_processing import convert_to_ha
 
 
 DARK_BLUE = "#262730"

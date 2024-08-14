@@ -3,22 +3,22 @@ from typing import List
 import streamlit as st
 import numpy as np
 import requests
-from .map import inject_map
-from .html_injection import (
+from utils.map_injection import inject_map
+from utils.html_injection import (
     inject_metric_bar,
     inject_bold_centered,
     inject_total_change
 )
-from .processing.metrics import (
+from utils.metrics_processing import (
     label,
     convert_to_ha,
     calculate_metrics,
 )
-from .processing.response_parsing import (
+from utils.response_parsing import (
     request_satellite_images,
     parse_response,
 )
-from .processing.graphics import (
+from utils.graphics_processing import (
     overlay_vector_on_image,
     bw_to_color
 )
