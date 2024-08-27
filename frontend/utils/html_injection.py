@@ -25,7 +25,7 @@ def inject_metric_bar(text: str, metric: float, unit: str = '%'):
             border-radius: 10px;
             padding: 5px;
             height: 3em;
-            width: {metric}%;
+            width: {metric if metric > 25 else 25}%;
             position: relative;">
             <p style="
                 font-weight: bold;
